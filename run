@@ -1,0 +1,7 @@
+#!/bin/bash
+
+make
+
+if [ -f 'exe' ]; then
+	time ./exe
+fi
