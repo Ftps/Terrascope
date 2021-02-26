@@ -1,3 +1,4 @@
 qcustomplot/*
 *.o
 exe
+*.tar.gz
