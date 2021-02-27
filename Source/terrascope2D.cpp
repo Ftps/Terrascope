@@ -37,15 +37,15 @@ int Ray2D::ray_tracer(const double& Ll, const double& Aa_entry, const double& dx
 	do{
 		++i;
 
-		n2 = 1/(vx*pwr(n(x[i], y[i]), 2));
-		ggy = gy2D(n, x[i], y[i]);
-		gv = vx*gx2D(n, x[i], y[i]) + vy*ggy;
+		n2 = 1/(vx*pwr(n(x[i-1], y[i-1]), 2));
+		ggy = gy2D(n, x[i-1], y[i-1]);
+		gv = vx*gx2D(n, x[i-1], y[i-1]) + vy*ggy;
 		dv = n2*(ggy - vy*gv);
 		vy += dv*dx;
 		vx = sqrt(1 - vy*vy);
 
-		x[i] += dx;
-		y[i] += vy*dx/n(x[i],y[i]);
+		x[i] = x[i-1] + dx;
+		y[i] = y[i-1] + vy*dx/n(x[i-1],y[i-1]);
 		r = x[i]*x[i] + y[i]*y[i];
 
 		if(r < R*R){

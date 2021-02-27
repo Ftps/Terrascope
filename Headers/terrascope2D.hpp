@@ -1,3 +1,6 @@
+#ifndef TERRASCOPE_2D_HPP
+#define TERRASCOPE_2D_HPP
+
 #include <functional>
 #include <iostream>
 #include <cmath>
@@ -33,3 +36,5 @@ double gx2D(std::function<double(double, double)> f, double x, double y, double 
 double gy2D(std::function<double(double, double)> f, double x, double y, double h = 0.001);
 
 double ray_tracer2D(const std::function<double(double, double)>& n, const double& R, const double& r_max, const double& L, const double& a_init, int& i, const double& dx = 1);
+
+#endif

@@ -1,24 +1,6 @@
-#include "terrascope2D.hpp"
-/*#include <QApplication>
-#include <QWidget>
-#include <QPushButton>
-#include <QLabel>
-#include <QGridLayout>
-#include <QSignalMapper>
-#include <QLineEdit>
-#include <QComboBox>
-#include <QPixmap>
-#include <QStringList>
-#include <QProgressBar>
-#include <QTableWidget>
-#include <QTableWidgetItem>
-#include <QColorDialog>
-#include <QHeaderView>
-#include <QBrush>
+#include "drawRay.hpp"
 
-//#include "qcustomplot.hpp"
-
-class PlotGraph : public QWidget {
+/*class PlotGraph : public QWidget {
 	public:
 		PlotGraph(QWidget *parent = 0) : QWidget(parent)
 		{
@@ -66,18 +48,57 @@ class PlotGraph : public QWidget {
 	private:
 		QGridLayout *grid;
 		QCustomPlot *customPlot;
-};
+};*/
 
 int main(int argc, char* argv[])
 {
-	QApplication a(argc, argv);
-	PlotGraph w;
-	w.show();
+	double R = 2574;			// planet radius
+	double H = 25;				// atmospheric scale height
+	double r_max = R + 10*H;	// top layer of the atmosphere
+	double L = 500000;
+	double a_init = 0.5*(R + r_max)/L;
+	std::function<ddd> n = [](double x, double y){ return 1 + 0.15*exp(-(sqrt(x*x + y*y)-2574)/25); };
 
-	return a.exec();
-}*/
+	Planet2D p(R, r_max, n);
+
+	if(argc == 1){
+		QApplication a(argc, argv);
+
+		DrawRay w(p, L, a_init);
+		w.show();
+
+		a.exec();
+	}
+	else{
+		int N = 10000000, iter, tot = 0;
+		double a, h = (1-0.98)*a_init/(double)N;
+
+		Ray2D ray(p);
+
+		ray.ray_tracer(L, a_init);
+
+		for(int i = 0; i <= N; ++i){
+			a = a_init - i*h;
+			if(!(i % 100000)) Print(i);
+			ray_tracer2D(n, R, r_max, L, a, iter, 10);
+			tot += iter;
+		}
 
 
+		Print("Total rays: " << N);
+		Print("Total Iterations: " << tot);
+		Print("Average Iterations per ray: " << tot/(double)N);
+
+		Print("\nSingle ray test:");
+		Print("Entry ray angle: " << ray.a_entry << " º");
+		Print("Exit ray angle: " << ray.a_exit << " º");
+	}
+
+
+	return 0;
+}
+
+/*
 int main(int argc, char* argv[])
 {
 	double R = 2574;			// planet radius
@@ -85,11 +106,17 @@ int main(int argc, char* argv[])
 	double r_max = R + 10*H;	// top layer of the atmosphere
 	//double N = 0.000293;		// surface refractivity
 	double L = 500000;
-	double a, a_init = 0.5*(R + r_max)/L;
-	int N = 350000, iter, tot = 0;
-	double h = (1.05-0.96)*a_init/(double)N;
+	double a_init = 0.5*(R + r_max)/L;
+	//int N = 350000, iter, tot = 0;
+	//double a, h = (1.05-0.96)*a_init/(double)N;
+	int i;
 
 	std::function<ddd> n = [](double x, double y){ return 1 + 0.1*exp(-(sqrt(x*x + y*y)-2574)/25); };
+
+	Planet2D p(R, r_max, n);
+	Ray2D ray(p);
+
+	ray.ray_tracer(L, a_init);
 
 	for(int i = 0; i <= N; ++i){
 		a = 1.05*a_init - i*h;
@@ -104,8 +131,9 @@ int main(int argc, char* argv[])
 	Print("Average Iterations per ray: " << tot/(double)N);
 
 	Print("\nSingle ray test:");
-	std::cout << "Entry ray angle: " << 180*a_init/3.14159 << " º" << std::endl;
-	std::cout << "Exit ray angle: " << 180*ray_tracer2D(n, R, r_max, L, a_init, iter)/3.14159 << " º" << std::endl;
+	Print("Entry ray angle: " << ray.a_entry << " º");
+	Print("Exit ray angle: " << ray.a_exit << " º");
 
 	return 0;
 }
+*/
