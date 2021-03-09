@@ -14,8 +14,8 @@ DrawRay::DrawRay(const Planet2D& p, const double& L, const double& a_entry, cons
 		plt->yAxis->setLabel("log10(ray density)");
 	}
 	else if(type == 2){
-		drawCircle(plt, p.r_max, Qt::white, QColor(0, 0, 255, 40));
-		drawCircle(plt, p.R, QColorConstants::Svg::brown, QColorConstants::Svg::brown);
+		drawCircle(plt, p.r_max, p.obf, Qt::white, QColor(0, 0, 255, 40));
+		drawCircle(plt, p.R, p.obf, QColorConstants::Svg::brown, QColorConstants::Svg::brown);
 
 		for(int i = 0; i < n_ray; ++i){
 			y = p.r_max - i*h;
@@ -32,8 +32,8 @@ DrawRay::DrawRay(const Planet2D& p, const double& L, const double& a_entry, cons
 		plt->yAxis2->setTickLabels(false);
 	}
 	else if(type == 3){
-		drawCircle(plt, p.r_max, Qt::white, QColor(0, 0, 255, 40));
-		drawCircle(plt, p.R, QColorConstants::Svg::brown, QColorConstants::Svg::brown);
+		drawCircle(plt, p.r_max, p.obf, Qt::white, QColor(0, 0, 255, 40));
+		drawCircle(plt, p.R, p.obf, QColorConstants::Svg::brown, QColorConstants::Svg::brown);
 		drawRay(plt, p, L, a_entry, Qt::black);
 
 		plt->xAxis->setRange(-3.5*p.r_max, 3.5*p.r_max);
@@ -52,23 +52,24 @@ DrawRay::DrawRay(const Planet2D& p, const double& L, const double& a_entry, cons
 	//Print("Number of rays: " << n_ray);
 }
 
-void drawCircle(QCustomPlot* plt, const double& r, const QColor& line_c, const QColor& fill_c)
+void drawCircle(QCustomPlot* plt, const double& r, const double& obf, const QColor& line_c, const QColor& fill_c)
 {
 	QCPGraph* aux = plt->addGraph();
 	QVector<double> x(CIRC_NUM), y1(CIRC_NUM), y2(CIRC_NUM), yl(CIRC_NUM);
-	double h = 2*r/(CIRC_NUM-1), r2 = r*r;
+	double rr = 1 - obf;
+	double h = 2*r/(rr*(CIRC_NUM-1)), r2 = r*r;
 
-	x[0] = -r;
+	x[0] = -r/rr;
 	y1[0] = 0;
 	y2[0] = 0;
 
 	for(int i = 1; i < CIRC_NUM-1; ++i){
 		x[i] = x[i-1] + h;
-		y1[i] = qSqrt(r2 - x[i]*x[i]);
+		y1[i] = qSqrt(r2 - pwr(rr*x[i], 2));
 		y2[i] = -y1[i];
 	}
 
-	x[CIRC_NUM-1] = r;
+	x[CIRC_NUM-1] = r/rr;
 	y1[CIRC_NUM-1] = 0;
 	y2[CIRC_NUM-1] = 0;
 
@@ -139,7 +140,7 @@ void drawRayDensity(QCustomPlot *plt, const Planet2D& p, const QColor& line_c)
 
 	for(int i = 1; i < n; ++i){
 		h += dh;
-		x[i] = ray_tracer2D_hor(p.n, p.R, p.r_max, h, 5);
+		x[i] = ray_tracer2D_hor(p.n, p.R, p.r_max, p.obf, h, 5);
 		dx[i-1] = log10(dh/((x[i] - x[i-1])));
 		hh[i-1] = 0.5*(x[i] - x[i-1]);
 	}
