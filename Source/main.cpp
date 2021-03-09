@@ -5,7 +5,7 @@
 #define R_REF 6376
 #define H_REF 8.5
 #define OBF 0.003292568
-#define RR 1 - OBF
+#define RR (1 - OBF)
 
 int main(int argc, char* argv[])
 {
