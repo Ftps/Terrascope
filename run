@@ -7,5 +7,5 @@ fi
 make
 
 if [ -f 'exe' ]; then
-	time ./exe $1
+	time ./exe "$@"
 fi

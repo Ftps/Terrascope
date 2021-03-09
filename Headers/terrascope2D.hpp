@@ -27,14 +27,18 @@ class Ray2D : Planet2D {
 
 		Ray2D(const Planet2D& p);
 		int ray_tracer(const double& Ll, const double& Aa_entry, const double& dx = 1);
+		int ray_tracer_hor(const double& Y, const double& dx = 1);
 };
 
 double fisqrt(double n);
 double pwr(double a, int n);
 
-double gx2D(std::function<double(double, double)> f, double x, double y, double h = 0.001);
-double gy2D(std::function<double(double, double)> f, double x, double y, double h = 0.001);
+double gx2D(const std::function<ddd>& f, const double& x, const double& y, const double& h = 0.001);
+double gy2D(const std::function<ddd>& f, const double& x, const double& y, const double& h = 0.001);
 
-double ray_tracer2D(const std::function<double(double, double)>& n, const double& R, const double& r_max, const double& L, const double& a_init, int& i, const double& dx = 1);
+double ray_tracer2D(const std::function<ddd>& n, const double& R, const double& r_max, const double& L, const double& a_init, const double& dx = 10);
+double ray_tracer2D_hor(const std::function<ddd>& n, const double& R, const double& r_max, const double& y, const double& dx = 10);
+
+double focalPoint(const Planet2D& p, const int& N);
 
 #endif

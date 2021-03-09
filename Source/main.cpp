@@ -1,29 +1,44 @@
 #include "drawRay.hpp"
+#include <chrono>
+
+#define N_REF 0.000293
+#define R_REF 6376
+#define H_REF 8.5
 
 int main(int argc, char* argv[])
 {
-	double R = 2574;			// planet radius
-	double H = 25;				// atmospheric scale height
-	double r_max = R + 10*H;	// top layer of the atmosphere
+	double R = R_REF;			// planet radius
+	double H = H_REF;			// atmospheric scale height
+	double r_max = R + 15*H;	// top layer of the atmosphere
 	double L = 500000;
 	double a_init = 0.5*(R + r_max)/L;
 
 	if(argc == 1){
-		std::function<ddd> n = [](double x, double y){ return 1 + 0.5*exp(-(sqrt(x*x + y*y)-2574)/25); };
+		int type;
+		char b[2];
+		std::function<ddd> n = [](double x, double y){ return 1 + N_REF*exp(-(sqrt(x*x + y*y)-R_REF)/H_REF); };
 		Planet2D p(R, r_max, n);
 
 		QApplication a(argc, argv);
 
-		DrawRay w(p, L, a_init);
+		try {
+			Print("Input graph number (1 - ray density, 2 - multiple horizontal rays, 3 - single ray)");
+			fgets(b, 2, stdin);
+			type = std::atoi(b);
+		}
+		catch(...) {
+			type = 1;
+		}
+
+		DrawRay w(p, L, a_init, type);
 		w.show();
 
-		Print("Surface level refractivity of 0.5");
 		a.exec();
 	}
-	else{
-		std::function<ddd> n = [](double x, double y){ return 1 + 0.15*exp(-(sqrt(x*x + y*y)-2574)/25); };
+	else if(!strcmp(argv[1], "1")){
+		std::function<ddd> n = [](double x, double y){ return 1 + 0.15*exp(-(sqrt(x*x + y*y)-R_REF)/H_REF); };
 		Planet2D p(R, r_max, n);
-		int N = 10000000, iter, tot = 0;
+		int N = 10000000;
 		double a, h = (1-0.98)*a_init/(double)N;
 
 		Ray2D ray(p);
@@ -33,61 +48,43 @@ int main(int argc, char* argv[])
 		for(int i = 0; i <= N; ++i){
 			a = a_init - i*h;
 			if(!(i % 100000)) Print(i);
-			ray_tracer2D(n, R, r_max, L, a, iter, 10);
-			tot += iter;
+			ray_tracer2D(n, R, r_max, L, a, 10);
 		}
-
-
-		Print("Total rays: " << N);
-		Print("Total Iterations: " << tot);
-		Print("Average Iterations per ray: " << tot/(double)N);
 
 		Print("\nSingle ray test:");
 		Print("Entry ray angle: " << ray.a_entry << " º");
 		Print("Exit ray angle: " << ray.a_exit << " º");
 		Print("Surface level refractivity of 0.15");
 	}
+	else if(!strcmp(argv[1], "2")){
+		std::function<ddd> n = [](double x, double y){ return 1 + N_REF*exp(-(sqrt(x*x + y*y)-R_REF)/H_REF); };
+		Planet2D p(R, r_max, n);
+		int N = 1000;
 
+		Print(focalPoint(p, N));
+	}
+	else if(!strcmp(argv[1], "3")){
+		int N = 100000000;
+		double dh = 1e-3, aux;
+		auto start = std::chrono::high_resolution_clock::now();
 
-	return 0;
-}
+		for(int i = 1; i <= N; ++i){
+			aux = sqrt(i*dh);
+			aux = 1/aux;
+		}
 
-/*
-int main(int argc, char* argv[])
-{
-	double R = 2574;			// planet radius
-	double H = 25;				// atmospheric scale height
-	double r_max = R + 10*H;	// top layer of the atmosphere
-	//double N = 0.000293;		// surface refractivity
-	double L = 500000;
-	double a_init = 0.5*(R + r_max)/L;
-	//int N = 350000, iter, tot = 0;
-	//double a, h = (1.05-0.96)*a_init/(double)N;
-	int i;
+		auto mid = std::chrono::high_resolution_clock::now();
 
-	std::function<ddd> n = [](double x, double y){ return 1 + 0.1*exp(-(sqrt(x*x + y*y)-2574)/25); };
+		for(int i = 1; i <= N; ++i){
+			aux = fisqrt(i*dh);
+			aux = 1/aux;
+		}
 
-	Planet2D p(R, r_max, n);
-	Ray2D ray(p);
+		auto stop = std::chrono::high_resolution_clock::now();
 
-	ray.ray_tracer(L, a_init);
-
-	for(int i = 0; i <= N; ++i){
-		a = 1.05*a_init - i*h;
-		if(!(i % 1000)) Print(i);
-		ray_tracer2D(n, R, r_max, L, a, iter, 10);
-		tot += iter;
+		Print("Normal sqrt: " << std::chrono::duration_cast<std::chrono::microseconds>(mid-start).count());
+		Print("Fast inverse sqrt: " << std::chrono::duration_cast<std::chrono::microseconds>(stop-mid).count());
 	}
 
-
-	Print("Total rays: " << N);
-	Print("Total Iterations: " << tot);
-	Print("Average Iterations per ray: " << tot/(double)N);
-
-	Print("\nSingle ray test:");
-	Print("Entry ray angle: " << ray.a_entry << " º");
-	Print("Exit ray angle: " << ray.a_exit << " º");
-
 	return 0;
 }
-*/

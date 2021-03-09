@@ -5,7 +5,7 @@ Ray2D::Ray2D(const Planet2D& p) : Planet2D(p), x(0), y(0) {}
 
 int Ray2D::ray_tracer(const double& Ll, const double& Aa_entry, const double& dx)
 {
-	double vx, vy, r, n2, dv, gv, ggy;
+	double vx_i, vy, r, n2, dv, gv, ggy;
 	double ta = tan(Aa_entry);
 	double ta2 = ta*ta;
 	double det = ta2*ta2*Ll*Ll - (1+ta2)*(ta2*Ll*Ll - r_max*r_max);
@@ -17,6 +17,8 @@ int Ray2D::ray_tracer(const double& Ll, const double& Aa_entry, const double& dx
 	if(det < 0){
 		x.resize(2);
 		y.resize(2);
+		x[0] = -L;
+		y[0] = 0;
 		x[1] = 5*r_max;
 		y[1] = ta*(x[1] + L);
 		a_exit = a_entry;
@@ -31,21 +33,21 @@ int Ray2D::ray_tracer(const double& Ll, const double& Aa_entry, const double& dx
 	x[1] = -(ta2*L + sqrt(det))/(1 + ta2); 	//
 	y[1] = ta*(x[1] + L);						//
 											// initial conditions at the atmosphere's boundary
-	vx = cos(Aa_entry);						//
+	vx_i = 1/cos(Aa_entry);						//
 	vy = sin(Aa_entry);						//
 
 	do{
 		++i;
 
-		n2 = 1/(vx*pwr(n(x[i-1], y[i-1]), 2));
+		n2 = vx_i/(pwr(n(x[i-1], y[i-1]), 2));
 		ggy = gy2D(n, x[i-1], y[i-1]);
-		gv = vx*gx2D(n, x[i-1], y[i-1]) + vy*ggy;
+		gv = gx2D(n, x[i-1], y[i-1])/vx_i + vy*ggy;
 		dv = n2*(ggy - vy*gv);
 		vy += dv*dx;
-		vx = sqrt(1 - vy*vy);
+		vx_i = fisqrt(1 - vy*vy);
 
 		x[i] = x[i-1] + dx;
-		y[i] = y[i-1] + vy*dx/n(x[i-1],y[i-1]);
+		y[i] = y[i-1] + vx_i*vy*dx/n(x[i-1],y[i-1]);
 		r = x[i]*x[i] + y[i]*y[i];
 
 		if(r < R*R){
@@ -57,14 +59,79 @@ int Ray2D::ray_tracer(const double& Ll, const double& Aa_entry, const double& dx
 	}while(r < r_max*r_max);
 
 
-	a_exit = 180*atan(vy/vx)/M_PI;
+	a_exit = 180*atan(vy*vx_i)/M_PI;
 	x.resize(i+2);
 	y.resize(i+2);
 	x[i+1] = 5*r_max;
-	y[i+1] = y[i] + (vy/vx)*(x[i+1] - x[i]);
+	y[i+1] = y[i] + (vy*vx_i)*(x[i+1] - x[i]);
 
 	return 1;
 }
+
+int Ray2D::ray_tracer_hor(const double& Y, const double& dx)
+{
+	double vx_i, vy, r, n2, dv, gv, ggy;
+
+	a_entry = 0;
+	L = INFINITY;
+	i = 1;
+
+	if((Y > r_max) || (Y < -r_max)){
+		x.resize(2);
+		y.resize(2);
+		x[0] = -5*r_max;
+		y[0] = Y;
+		x[1] = 5*r_max;
+		y[1] = Y;
+		a_exit = a_entry;
+		return 0;
+	}
+
+	x.resize(2*r_max/dx);
+	y.resize(2*r_max/dx);
+	x[0] = -5*r_max;
+	y[0] = Y;
+
+	x[1] = -sqrt(r_max*r_max - Y*Y); 		//
+	y[1] = Y;								//
+											// initial conditions at the atmosphere's boundary
+	vx_i = 1;									//
+	vy = 0;									//
+
+	do{
+		++i;
+
+		n2 = vx_i/(pwr(n(x[i-1], y[i-1]), 2));
+		ggy = gy2D(n, x[i-1], y[i-1]);
+		gv = gx2D(n, x[i-1], y[i-1])/vx_i + vy*ggy;
+		dv = n2*(ggy - vy*gv);
+		vy += dv*dx;
+		vx_i = fisqrt(1 - vy*vy);
+
+		x[i] = x[i-1] + dx;
+		y[i] = y[i-1] + vx_i*vy*dx/n(x[i-1],y[i-1]);
+		r = x[i]*x[i] + y[i]*y[i];
+
+		if(r < R*R){
+			x.resize(i+1);
+			y.resize(i+1);
+			a_exit = nan("");
+			return -1;
+		}
+	}while(r < r_max*r_max);
+
+
+	a_exit = 180*atan(vy*vx_i)/M_PI;
+	x.resize(i+2);
+	y.resize(i+2);
+	x[i+1] = 5*r_max;
+	y[i+1] = y[i] + (vy*vx_i)*(x[i+1] - x[i]);
+
+	return 1;
+}
+
+
+
 
 double fisqrt(double n)
 {
@@ -78,6 +145,7 @@ double fisqrt(double n)
 	y  = * ( double* ) &i;
 	y  = y * ( threehalfs - ( x2 * y * y ) );   // 1st iteration
 	y  = y * ( threehalfs - ( x2 * y * y ) );   // 2nd iteration, this can be removed
+	y  = y * ( threehalfs - ( x2 * y * y ) );
 
 	return y;
 }
@@ -90,31 +158,29 @@ double pwr(double a, int n)
 
 
 
-double gx2D(std::function<double(double, double)> f, double x, double y, double h)
+double gx2D(const std::function<ddd>& f, const double& x, const double& y, const double& h)
 {
 	return (f(x+h, y) - f(x-h, y))/(2*h);
 }
 
-double gy2D(std::function<double(double, double)> f, double x, double y, double h)
+double gy2D(const std::function<ddd>& f, const double& x, const double& y, const double& h)
 {
 	return (f(x, y+h) - f(x, y-h))/(2*h);
 }
 
 
 
-double ray_tracer2D(const std::function<double(double, double)>& n, const double& R, const double& r_max, const double& L, const double& a_init, int& i, const double& dx)
+double ray_tracer2D(const std::function<ddd>& n, const double& R, const double& r_max, const double& L, const double& a_init, const double& dx)
 {
 	double x, y, vx, vy, r, n2, dv, gv, ggy;
 	double ta = tan(a_init);
 	double ta2 = ta*ta;
 	double det = ta2*ta2*L*L - (1+ta2)*(ta2*L*L - r_max*r_max);
 
-	i = 1;
-
 	if(det < 0) return a_init;	// ray does not enter the atmosphere, angle remains constant
 
 	x = -(ta2*L + sqrt(det))/(1 + ta2); 	//
-	y = ta*(x + L);						//
+	y = ta*(x + L);							//
 											// initial conditions at the atmosphere's boundary
 	vx = cos(a_init);						//
 	vy = sin(a_init);						//
@@ -122,23 +188,88 @@ double ray_tracer2D(const std::function<double(double, double)>& n, const double
 	//r = r_max*r_max;
 
 	do{
-		++i;
-		//LOG
 		n2 = 1/(vx*pwr(n(x, y), 2));
 		ggy = gy2D(n, x, y);
-		gv = vx*gx2D(n, x, y) + vy*ggy;
+		gv = gx2D(n, x, y)*vx + vy*ggy;
 		dv = n2*(ggy - vy*gv);
 		vy += dv*dx;
 		vx = sqrt(1 - vy*vy);
 
 		x += dx;
-		y += vy*dx/n(x,y);
+		y += vy*dx/vx;
 		r = x*x + y*y;
-		//print(n2);
-		//print(dv);
 
 		if(r < R*R) return -100;
 	}while(r < r_max*r_max);
 
 	return atan(vy/vx);
+}
+
+double ray_tracer2D_hor(const std::function<ddd>& n, const double& R, const double& r_max, const double& Y, const double& dx)
+{
+	double x, y, vx, vy, r, n2, dv, gv, ggy;
+
+	if((Y > r_max) || (-Y > r_max)) return -1;
+
+	x = -sqrt(r_max*r_max - Y*Y);
+	y = Y;
+	vx = 1;
+	vy = 0;
+
+	do{
+		n2 = 1/(vx*pwr(n(x, y), 2));
+		ggy = gy2D(n, x, y);
+		gv = gx2D(n, x, y)*vx + vy*ggy;
+		dv = n2*(ggy - vy*gv);
+		vy += dv*dx;
+		vx = sqrt(1 - vy*vy);
+
+		x += dx;
+		y += vy/vx*dx;
+		r = x*x + y*y;
+
+		if(r < R*R) return -2;
+	}while(r < r_max*r_max);
+
+	return x - y*vx/vy;
+}
+
+double focalPoint(const Planet2D& p, const int& N)
+{
+	double h_min = p.R, dh = 0.01, a_min, h, dx_max = 0;
+	double *x, *dx;
+	int n, i_max = 0;
+
+	do{
+		h_min += dh;
+		a_min = ray_tracer2D_hor(p.n, p.R, p.r_max, h_min);
+	}while(a_min == -2);
+
+	n = floor((p.r_max - h_min)/dh);
+
+	x = new double[n];
+	dx = new double[n-1];
+
+	x[0] = a_min;
+	h = h_min;
+
+	for(int i = 1; i < n; ++i){
+		h += dh;
+		x[i] = ray_tracer2D_hor(p.n, p.R, p.r_max, h);
+		dx[i-1] = dh/(x[i] - x[i-1]);
+		if(dx_max < dx[i-1]){
+			i_max = i-1;
+			dx_max = dx[i-1];
+		}
+	}
+
+	delete x;
+	delete dx;
+
+	Print(a_min);
+	Print(i_max);
+	Print(dx_max);
+	Print(0.5*(x[i_max+1] + x[i_max]));
+
+	return 0.5*(x[i_max+1] + x[i_max]);
 }

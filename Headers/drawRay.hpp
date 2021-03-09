@@ -27,13 +27,15 @@
 
 class DrawRay : public QWidget {
 	public:
-		DrawRay(const Planet2D& p, const double& L, const double& a_entry);
+		DrawRay(const Planet2D& p, const double& L, const double& a_entry, const int& type);
 	private:
 		QGridLayout *grid;
 		QCustomPlot *plt;
 };
 
 void drawCircle(QCustomPlot* plt, const double& r, const QColor& line_c, const QColor& fill_c);
-void drawRay(QCustomPlot* plt, const Planet2D& p, const double& L, const double& a_entry, const QColor& line_c);
+int drawRay(QCustomPlot* plt, const Planet2D& p, const double& L, const double& a_entry, const QColor& line_c);
+int drawRayHor(QCustomPlot* plt, const Planet2D& p, const double& Y, const QColor& line_c);
+void drawRayDensity(QCustomPlot *plt, const Planet2D& p, const QColor& line_c);
 
 #endif
