@@ -1,4 +1,6 @@
-qcustomplot/*
+qcustomplot/documentation
+qcustomplot/examples
+qcustomplot/c*
 *.o
 exe
 *.tar.gz

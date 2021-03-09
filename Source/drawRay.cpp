@@ -140,7 +140,7 @@ void drawRayDensity(QCustomPlot *plt, const Planet2D& p, const QColor& line_c)
 	for(int i = 1; i < n; ++i){
 		h += dh;
 		x[i] = ray_tracer2D_hor(p.n, p.R, p.r_max, h, 5);
-		dx[i-1] = log10(dh/((x[i] - x[i-1])));
+		dx[i-1] = log10(2*M_PI*(h-0.5*dh)*dh/((x[i] - x[i-1])));
 		hh[i-1] = 0.5*(x[i] - x[i-1]);
 	}
 
