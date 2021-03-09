@@ -133,21 +133,24 @@ int Ray2D::ray_tracer_hor(const double& Y, const double& dx)
 
 
 
-double fisqrt(double n)
+double fisqrt(double n) // Fast inverse square root algorithim for double
 {
-	long i;
-	double x2, y;
-	const double threehalfs = 1.5;
+	union{
+		double y;
+		long i;
+	} caster;
+	double x2;
+	const double thf = 1.5;
 
 	x2 = n*0.5;
-	i  = * ( long * ) &n;                       // evil floating point bit level hacking
-	i  = 0x5fe6eb50c7b537a9 - ( i >> 1 );               // what the fuck?
-	y  = * ( double* ) &i;
-	y  = y * ( threehalfs - ( x2 * y * y ) );   // 1st iteration
-	y  = y * ( threehalfs - ( x2 * y * y ) );   // 2nd iteration, this can be removed
-	y  = y * ( threehalfs - ( x2 * y * y ) );
+	caster.y  = n;                       // evil floating point bit level hacking
+	caster.i  = 0x5fe6eb50c7b537a9 - ( caster.i >> 1 );       // log magic with exponents
 
-	return y;
+	caster.y  = caster.y * ( thf - ( x2 * caster.y * caster.y ) );   // 1st iteration (accuracy ~1e-3)
+	caster.y  = caster.y * ( thf - ( x2 * caster.y * caster.y ) );   // 2nd iteration (accuracy ~1e-6)
+	//caster.y  = caster.y * ( thf - ( x2 * caster.y * caster.y ) );   // 3rd iteration, this can be removed for speed (accuracy ~1e-11)
+
+	return caster.y;
 }
 
 double pwr(double a, int n)
