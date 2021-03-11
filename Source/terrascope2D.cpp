@@ -40,7 +40,7 @@ int Ray2D::ray_tracer(const double& Ll, const double& Aa_entry, const double& dx
 	do{
 		++i;
 
-		n2 = 1/(vx*pwr(n(x[i-1], y[i-1]), 2));
+		n2 = 1/(vx*sq(n(x[i-1], y[i-1])));
 		ggy = gy2D(n, x[i-1], y[i-1]);
 		gv = gx2D(n, x[i-1], y[i-1])*vx + vy*ggy;
 		dv = n2*(ggy - vy*gv);
@@ -49,7 +49,7 @@ int Ray2D::ray_tracer(const double& Ll, const double& Aa_entry, const double& dx
 
 		x[i] = x[i-1] + dx;
 		y[i] = y[i-1] + vy*dx/vx;
-		r = pwr(rr*x[i], 2) + y[i]*y[i];
+		r = sq(rr*x[i]) + y[i]*y[i];
 
 		if(r < R*R){
 			x.resize(i+1);
@@ -103,7 +103,7 @@ int Ray2D::ray_tracer_hor(const double& Y, const double& dx)
 	do{
 		++i;
 
-		n2 = 1/(vx*pwr(n(x[i-1], y[i-1]), 2));
+		n2 = 1/(vx*sq(n(x[i-1], y[i-1])));
 		ggy = gy2D(n, x[i-1], y[i-1]);
 		gv = gx2D(n, x[i-1], y[i-1])*vx + vy*ggy;
 		dv = n2*(ggy - vy*gv);
@@ -112,7 +112,7 @@ int Ray2D::ray_tracer_hor(const double& Y, const double& dx)
 
 		x[i] = x[i-1] + dx;
 		y[i] = y[i-1] + vy*dx/vx;
-		r = pwr(rr*x[i], 2) + y[i]*y[i];
+		r = sq(rr*x[i]) + y[i]*y[i];
 
 		if(r < R*R){
 			x.resize(i+1);
@@ -155,10 +155,9 @@ double fisqrt(double n) // Fast inverse square root algorithim for double
 	return caster.y;
 }
 
-double pwr(double a, int n)
+double sq(double a)
 {
-	if(n == 1) return a;
-	else return pwr(a, n-1);
+	return a*a;
 }
 
 
@@ -194,7 +193,7 @@ double ray_tracer2D(const std::function<ddd>& n, const double& R, const double& 
 	//r = r_max*r_max;
 
 	do{
-		n2 = 1/(vx*pwr(n(x, y), 2));
+		n2 = 1/(vx*sq(n(x, y)));
 		ggy = gy2D(n, x, y);
 		gv = gx2D(n, x, y)*vx + vy*ggy;
 		dv = n2*(ggy - vy*gv);
@@ -203,7 +202,7 @@ double ray_tracer2D(const std::function<ddd>& n, const double& R, const double& 
 
 		x += dx;
 		y += vy*dx/vx;
-		r = pwr(x*rr, 2) + y*y;
+		r = sq(x*rr) + y*y;
 
 		if(r < R*R) return -100;
 	}while(r < r_max*r_max);
@@ -213,7 +212,7 @@ double ray_tracer2D(const std::function<ddd>& n, const double& R, const double& 
 
 double ray_tracer2D_hor(const std::function<ddd>& n, const double& R, const double& r_max, const double& obf, const double& Y, const double& dx)
 {
-	double x, y, vx, vy, r, n2, dv, gv, ggy;
+	double x, y, vx, vy, r, dv, gv, ggy, n2;
 	double rr = 1 - obf;
 
 	if((Y > r_max) || (-Y > r_max)) return -1;
@@ -224,16 +223,16 @@ double ray_tracer2D_hor(const std::function<ddd>& n, const double& R, const doub
 	vy = 0;
 
 	do{
-		n2 = 1/(vx*pwr(n(x, y), 2));
+		n2 = 1/(vx*sq(n(x, y)));
 		ggy = gy2D(n, x, y);
 		gv = gx2D(n, x, y)*vx + vy*ggy;
-		dv = n2*(ggy - vy*gv);
+		dv = (ggy - vy*gv)*n2;
 		vy += dv*dx;
 		vx = sqrt(1 - vy*vy);
 
 		x += dx;
 		y += vy/vx*dx;
-		r = pwr(x*rr, 2) + y*y;
+		r = sq(x*rr) + y*y;
 
 		if(r < R*R) return -2;
 	}while(r < r_max*r_max);

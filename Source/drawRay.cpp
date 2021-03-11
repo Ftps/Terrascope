@@ -65,7 +65,7 @@ void drawCircle(QCustomPlot* plt, const double& r, const double& obf, const QCol
 
 	for(int i = 1; i < CIRC_NUM-1; ++i){
 		x[i] = x[i-1] + h;
-		y1[i] = qSqrt(r2 - pwr(rr*x[i], 2));
+		y1[i] = qSqrt(r2 - sq(rr*x[i]));
 		y2[i] = -y1[i];
 	}
 
@@ -124,7 +124,8 @@ void drawRayDensity(QCustomPlot *plt, const Planet2D& p, const QColor& line_c)
 
 	do{
 		h_min += dh;
-		a_min = ray_tracer2D_hor(p.n, p.R, p.r_max, h_min, 1);
+		a_min = ray_tracer2D_hor(p.n, p.R, p.r_max, p.obf, h_min, 1);
+
 	}while(a_min == -2);
 
 	n = floor((p.r_max - h_min)/dh);

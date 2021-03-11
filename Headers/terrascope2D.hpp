@@ -31,7 +31,7 @@ class Ray2D : Planet2D {
 };
 
 double fisqrt(double n);
-double pwr(double a, int n);
+double sq(double a);
 
 double gx2D(const std::function<ddd>& f, const double& x, const double& y, const double& h = 0.001);
 double gy2D(const std::function<ddd>& f, const double& x, const double& y, const double& h = 0.001);
