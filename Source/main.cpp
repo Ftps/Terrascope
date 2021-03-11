@@ -4,20 +4,23 @@
 #define N_REF 0.000293
 #define R_REF 6376
 #define H_REF 8.5
+#define OBF 0.003292568
+#define RR (1 - OBF)
 
 int main(int argc, char* argv[])
 {
 	double R = R_REF;			// planet radius
 	double H = H_REF;			// atmospheric scale height
 	double r_max = R + 15*H;	// top layer of the atmosphere
+	double obf = OBF;
 	double L = 500000;
 	double a_init = 0.5*(R + r_max)/L;
+	std::function<ddd> n = [](double x, double y){ return 1 + N_REF*exp(-(sqrt(sq(RR*x) + y*y)-R_REF)/H_REF); };
+	Planet2D p(R, r_max, obf, n);
 
 	if(argc == 1){
 		int type;
 		char b[2];
-		std::function<ddd> n = [](double x, double y){ return 1 + N_REF*exp(-(sqrt(x*x + y*y)-R_REF)/H_REF); };
-		Planet2D p(R, r_max, n);
 
 		QApplication a(argc, argv);
 
@@ -36,8 +39,6 @@ int main(int argc, char* argv[])
 		a.exec();
 	}
 	else if(!strcmp(argv[1], "1")){
-		std::function<ddd> n = [](double x, double y){ return 1 + 0.15*exp(-(sqrt(x*x + y*y)-R_REF)/H_REF); };
-		Planet2D p(R, r_max, n);
 		int N = 10000000;
 		double a, h = (1-0.98)*a_init/(double)N;
 
@@ -48,42 +49,23 @@ int main(int argc, char* argv[])
 		for(int i = 0; i <= N; ++i){
 			a = a_init - i*h;
 			if(!(i % 100000)) Print(i);
-			ray_tracer2D(n, R, r_max, L, a, 10);
+			ray_tracer2D(n, R, r_max, obf, L, a, 10);
 		}
 
 		Print("\nSingle ray test:");
 		Print("Entry ray angle: " << ray.a_entry << " º");
 		Print("Exit ray angle: " << ray.a_exit << " º");
-		Print("Surface level refractivity of 0.15");
+		Print("Surface level refractivity of " << N_REF);
 	}
 	else if(!strcmp(argv[1], "2")){
-		std::function<ddd> n = [](double x, double y){ return 1 + N_REF*exp(-(sqrt(x*x + y*y)-R_REF)/H_REF); };
-		Planet2D p(R, r_max, n);
 		int N = 1000;
 
 		Print(focalPoint(p, N));
 	}
-	else if(!strcmp(argv[1], "3")){
-		int N = 100000000;
-		double dh = 1e-3, aux;
-		auto start = std::chrono::high_resolution_clock::now();
+	else if(!strcmp(argv[1], "3")){ // Testing purposes
+		double h = R + 0.01;
 
-		for(int i = 1; i <= N; ++i){
-			aux = sqrt(i*dh);
-			aux = 1/aux;
-		}
-
-		auto mid = std::chrono::high_resolution_clock::now();
-
-		for(int i = 1; i <= N; ++i){
-			aux = fisqrt(i*dh);
-			aux = 1/aux;
-		}
-
-		auto stop = std::chrono::high_resolution_clock::now();
-
-		Print("Normal sqrt: " << std::chrono::duration_cast<std::chrono::microseconds>(mid-start).count());
-		Print("Fast inverse sqrt: " << std::chrono::duration_cast<std::chrono::microseconds>(stop-mid).count());
+		Print(ray_tracer2D_hor(n, R, r_max, obf, h, 1));
 	}
 
 	return 0;

@@ -33,7 +33,7 @@ class DrawRay : public QWidget {
 		QCustomPlot *plt;
 };
 
-void drawCircle(QCustomPlot* plt, const double& r, const QColor& line_c, const QColor& fill_c);
+void drawCircle(QCustomPlot* plt, const double& r, const double& obf, const QColor& line_c, const QColor& fill_c);
 int drawRay(QCustomPlot* plt, const Planet2D& p, const double& L, const double& a_entry, const QColor& line_c);
 int drawRayHor(QCustomPlot* plt, const Planet2D& p, const double& Y, const QColor& line_c);
 void drawRayDensity(QCustomPlot *plt, const Planet2D& p, const QColor& line_c);
