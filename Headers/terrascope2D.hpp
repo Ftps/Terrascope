@@ -36,7 +36,7 @@ double sq(double a);
 double gx2D(const std::function<ddd>& f, const double& x, const double& y, const double& h = 0.001);
 double gy2D(const std::function<ddd>& f, const double& x, const double& y, const double& h = 0.001);
 
-double ray_tracer2D(const std::function<ddd>& n, const double& R, const double& r_max, const double& obf, const double& L, const double& a_init, const double& dx = 10);
+double ray_tracer2D(const std::function<ddd>& n, const double& R, const double& r_max, const double& obf, const double& L, const double& a_init, const double& dz = 10);
 double ray_tracer2D_hor(const std::function<ddd>& n, const double& R, const double& r_max, const double& obf, const double& y, const double& dx = 10);
 
 double focalPoint(const Planet2D& p, const int& N);

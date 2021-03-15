@@ -1,4 +1,5 @@
 #include "drawRay.hpp"
+#include "terrascope3D.hpp"
 #include <chrono>
 
 #define N_REF 0.000293
@@ -15,7 +16,7 @@ int main(int argc, char* argv[])
 	double obf = OBF;
 	double L = 500000;
 	double a_init = 0.5*(R + r_max)/L;
-	std::function<ddd> n = [](double x, double y){ return 1 + N_REF*exp(-(sqrt(sq(RR*x) + y*y)-R_REF)/H_REF); };
+	std::function<ddd> n = [](double x, double y){ return 1 + N_REF*exp(-(sqrt(sq((1/RR)*x) + y*y)-R_REF)/H_REF); };
 	Planet2D p(R, r_max, obf, n);
 
 	if(argc == 1){
@@ -48,7 +49,7 @@ int main(int argc, char* argv[])
 
 		for(int i = 0; i <= N; ++i){
 			a = a_init - i*h;
-			if(!(i % 100000)) Print(i);
+			//if(!(i % 100000)) Print(i);
 			ray_tracer2D(n, R, r_max, obf, L, a, 10);
 		}
 
@@ -63,9 +64,36 @@ int main(int argc, char* argv[])
 		Print(focalPoint(p, N));
 	}
 	else if(!strcmp(argv[1], "3")){ // Testing purposes
-		double h = R + 0.01;
+		std::function<dddd> n2 = [](double x, double y, double z){ return 1 + N_REF*exp(-(sqrt(sq((1/RR)*x) + y*y + z*z)-R_REF)/H_REF); };
+		Planet3D p2(R, r_max, obf, n2);
+		int N = 10000000;
+		double a, h = (1-0.98)*a_init/(double)N;
+		std::array<double, 2> init = {a_init, 0};
+		std::array<double, 2> ex = rayTracing(p2, L, init);
 
-		Print(ray_tracer2D_hor(n, R, r_max, obf, h, 1));
+		for(int i = 0; i < N; ++i){
+			a = a_init - i*h;
+			if(!(i % 100000)) Print(i);
+			rayTracing(p2, L, {a,0});
+		}
+
+		Print("X angle: " << 180*init[X]/M_PI << "; Y angle: " << init[Y]);
+		Print("X angle: " << 180*ex[X]/M_PI << "; Y angle: " << ex[Y]);
+	}
+	else if(!strcmp(argv[1], "4")){
+		std::function<dddd> n2 = [](double x, double y, double z){ return 1 + N_REF*exp(-(sqrt(sq((1/RR)*x) + y*y + z*z)-R_REF)/H_REF); };
+		Planet3D p2(R, r_max, obf, n2);
+		std::array<double, 2> init = {a_init, 0}, ex;
+		double e;
+
+		Print("2D");
+		e = ray_tracer2D(n, R, r_max, obf, L, a_init);
+
+		Print("3D");
+		ex = rayTracing(p2, L, init);
+
+		Print("2D angle:" << 180*e/M_PI);
+		Print("X angle: " << 180*ex[X]/M_PI << "; Y angle: " << ex[Y]);
 	}
 
 	return 0;

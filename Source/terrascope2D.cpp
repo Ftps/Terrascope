@@ -174,40 +174,38 @@ double gy2D(const std::function<ddd>& f, const double& x, const double& y, const
 
 
 
-double ray_tracer2D(const std::function<ddd>& n, const double& R, const double& r_max, const double& obf, const double& L, const double& a_init, const double& dx)
+double ray_tracer2D(const std::function<ddd>& n, const double& R, const double& r_max, const double& obf, const double& L, const double& a_init, const double& dz)
 {
-	double x, y, vx, vy, r, n2, dv, gv, ggy;
-	double rr = 1 - obf;
+	double z, y, vz, vy, r, n2, dv, gv, ggy;
+	double rr = 1/(1 - obf);
 	double ta = tan(a_init);
 	double ta2 = ta*ta;
 	double det = ta2*ta2*L*L - (rr*rr+ta2)*(ta2*L*L - r_max*r_max);
 
 	if(det < 0) return a_init;	// ray does not enter the atmosphere, angle remains constant
 
-	x = -(ta2*L + sqrt(det))/(rr*rr + ta2); 	//
-	y = ta*(x + L);							//
+	z = -(ta2*L + sqrt(det))/(rr*rr + ta2); 	//
+	y = ta*(z + L);							//
 											// initial conditions at the atmosphere's boundary
-	vx = cos(a_init);						//
+	vz = cos(a_init);						//
 	vy = sin(a_init);						//
 
-	//r = r_max*r_max;
-
 	do{
-		n2 = 1/(vx*sq(n(x, y)));
-		ggy = gy2D(n, x, y);
-		gv = gx2D(n, x, y)*vx + vy*ggy;
+		n2 = 1/(vz*sq(n(z, y)));
+		ggy = gy2D(n, z, y);
+		gv = gx2D(n, z, y)*vz + vy*ggy;
 		dv = n2*(ggy - vy*gv);
-		vy += dv*dx;
-		vx = sqrt(1 - vy*vy);
+		vy += dv*dz;
+		vz = sqrt(1 - vy*vy);
 
-		x += dx;
-		y += vy*dx/vx;
-		r = sq(x*rr) + y*y;
+		z += dz;
+		y += vy*dz/vz;
+		r = z*z + sq(y*rr);
 
 		if(r < R*R) return -100;
 	}while(r < r_max*r_max);
 
-	return atan(vy/vx);
+	return atan(vy/vz);
 }
 
 double ray_tracer2D_hor(const std::function<ddd>& n, const double& R, const double& r_max, const double& obf, const double& Y, const double& dx)

@@ -6,7 +6,7 @@ HEAD = ./Headers
 SRCS = ./Source
 INCDIRS = -I/usr/include/qt -I/usr/include/qt/QtWidgets -I/usr/include/qt/QtCore -I/usr/include/qt/QtGui -I$(HEAD)
 CFLAGS = -Wall -pedantic -O3 -fPIC -std=c++17 $(INCDIRS)
-#.PHONY: clean
+.PHONY: clean
 
 DEPS = $(wildcard $(HEAD)/*.hpp)
 MOCS = $(shell grep -l Q_OBJECT $(DEPS))
