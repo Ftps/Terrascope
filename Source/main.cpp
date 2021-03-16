@@ -5,7 +5,7 @@
 #define N_REF 0.000293
 #define R_REF 2200
 #define H_REF 25
-#define OBF 0.003292568
+#define OBF 0.0003292568
 //#define OBF 0
 #define RR (1 - OBF)
 
@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
 		std::function<dddd> n2 = [](double x, double y, double z){ return 1 + N_REF*exp(-(sqrt(sq((1/RR)*x) + y*y + z*z)-R_REF)/H_REF); };
 		Planet3D p2(R, r_max, obf, n2);
 		QApplication a(argc, argv);
-		ImageGen w(p2, L, 600);
+		ImageGen w(p2, L, 200);
 
 		w.show();
 		a.exec();

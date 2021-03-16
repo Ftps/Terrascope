@@ -54,6 +54,8 @@ class ImageGen : public QWidget {
 		//std::array<double,2> angleToCoord(const std::array<double,2>& a, const double& max);
 };
 
+QCPColorGradient redGrad();
+
 template<typename T>
 T** createMatrix(int N)
 {

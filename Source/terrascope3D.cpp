@@ -1,6 +1,6 @@
 #include "terrascope3D.hpp"
 
-#define OP 0.1
+#define OP 0.05
 
 Planet3D::Planet3D(const double &R, const double& r_max, const double& obf, const std::function<dddd>& n) : R(R), r_max(r_max), obf(obf), n(n) {}
 
@@ -34,11 +34,11 @@ void ImageGen::drawCFM()
 	bool in_picture;
 
 	plt->axisRect()->setupFullAxesBox(true);
-	plt->xAxis->setLabel("x - arcsec");
-	plt->yAxis->setLabel("y - arcsec");
+	plt->xAxis->setLabel("x - km");
+	plt->yAxis->setLabel("y - km");
 
 	colorMap->data()->setSize(N+1, N+1);
-	colorMap->data()->setRange(QCPRange(-OP*ARCSEC*max, OP*ARCSEC*max), QCPRange(-OP*ARCSEC*max, OP*ARCSEC*max));
+	colorMap->data()->setRange(QCPRange(-OP*L*max, OP*L*max), QCPRange(-OP*L*max, OP*L*max));
 
 	/*colorMap->data()->cellToCoord(N/2, N/2, &x, &y);
 	Print(1.5*max);
@@ -84,7 +84,7 @@ void ImageGen::drawCFM()
 	colorScale->setType(QCPAxis::atRight);
 	colorMap->setColorScale(colorScale);
 	colorScale->axis()->setLabel("Number of rays");
-	colorMap->setGradient(QCPColorGradient::gpGrayscale);
+	colorMap->setGradient(redGrad());
 	colorMap->setInterpolate(true);
 	colorMap->rescaleDataRange();
 	plt->axisRect()->setMarginGroup(QCP::msBottom|QCP::msTop, marginGroup);
@@ -92,6 +92,24 @@ void ImageGen::drawCFM()
 	plt->rescaleAxes();
 
 	freeMatrix<double>(data, N+1);
+}
+
+
+
+QCPColorGradient redGrad()
+{
+	QCPColorGradient grad;
+	QMap<double, QColor> c;
+
+	c[0] = Qt::black;
+	c[0.5] = Qt::red;
+	c[0.8] = Qt::white;
+	c[1] = Qt::white;
+
+	grad.setColorStops(c);
+	grad.setColorInterpolation(QCPColorGradient::ciRGB);
+
+	return grad;
 }
 
 
