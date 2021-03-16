@@ -162,50 +162,53 @@ double sq(double a)
 
 
 
-double gx2D(const std::function<ddd>& f, const double& x, const double& y, const double& h)
+double gx2D(const std::function<ddd>& f, const double& x, const double& z, const double& h)
 {
-	return (f(x+h, y) - f(x-h, y))/(2*h);
+	return (f(x+h, z) - f(x-h, z))/(2*h);
 }
 
-double gy2D(const std::function<ddd>& f, const double& x, const double& y, const double& h)
+double gy2D(const std::function<ddd>& f, const double& x, const double& z, const double& h)
 {
-	return (f(x, y+h) - f(x, y-h))/(2*h);
+	return (f(x, z+h) - f(x, z-h))/(2*h);
 }
 
 
 
 double ray_tracer2D(const std::function<ddd>& n, const double& R, const double& r_max, const double& obf, const double& L, const double& a_init, const double& dz)
 {
-	double z, y, vz, vy, r, n2, dv, gv, ggy;
+	double z, x, vz, vx, r, n2, dvx, gx;
 	double rr = 1/(1 - obf);
-	double ta = tan(a_init);
-	double ta2 = ta*ta;
-	double det = ta2*ta2*L*L - (rr*rr+ta2)*(ta2*L*L - r_max*r_max);
+	double ct = cos(a_init), st = sin(a_init);
+	double k = (sq(rr)-1)*sq(st) + 1;
+	double det = sq(L*ct) + k*(r_max*r_max - L*L);
 
 	if(det < 0) return a_init;	// ray does not enter the atmosphere, angle remains constant
 
-	z = -(ta2*L + sqrt(det))/(rr*rr + ta2); 	//
-	y = ta*(z + L);							//
-											// initial conditions at the atmosphere's boundary
-	vz = cos(a_init);						//
-	vy = sin(a_init);						//
+	vx = st;
+	vz = ct;							//
+
+	k = L*ct - sqrt(det)/k;										// initial conditions at the atmosphere's boundary
+	x = k*vx;						//
+	z = k*vz - L;						//
 
 	do{
-		n2 = 1/(vz*sq(n(z, y)));
-		ggy = gy2D(n, z, y);
-		gv = gx2D(n, z, y)*vz + vy*ggy;
-		dv = n2*(ggy - vy*gv);
-		vy += dv*dz;
-		vz = sqrt(1 - vy*vy);
+		n2 = 1/(vz*sq(n(x, z)));
+		gx = gx2D(n, x, z);
 
+		k = gy2D(n, x, z)*vz + vx*gx;
+		dvx = n2*(gx - vx*k);
+
+		vx += dvx*dz;
+		vz = sqrt(1 - sq(vx));
+
+		x += vx*dz/vz;
 		z += dz;
-		y += vy*dz/vz;
-		r = z*z + sq(y*rr);
+		r = sq(x*rr) + z*z;
 
 		if(r < R*R) return -100;
 	}while(r < r_max*r_max);
 
-	return atan(vy/vz);
+	return atan(vx/vz);
 }
 
 double ray_tracer2D_hor(const std::function<ddd>& n, const double& R, const double& r_max, const double& obf, const double& Y, const double& dx)

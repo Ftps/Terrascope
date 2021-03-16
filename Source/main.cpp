@@ -3,9 +3,10 @@
 #include <chrono>
 
 #define N_REF 0.000293
-#define R_REF 6376
-#define H_REF 8.5
+#define R_REF 2200
+#define H_REF 25
 #define OBF 0.003292568
+//#define OBF 0
 #define RR (1 - OBF)
 
 int main(int argc, char* argv[])
@@ -14,9 +15,9 @@ int main(int argc, char* argv[])
 	double H = H_REF;			// atmospheric scale height
 	double r_max = R + 15*H;	// top layer of the atmosphere
 	double obf = OBF;
-	double L = 500000;
+	double L = 150000000;
 	double a_init = 0.5*(R + r_max)/L;
-	std::function<ddd> n = [](double x, double y){ return 1 + N_REF*exp(-(sqrt(sq((1/RR)*x) + y*y)-R_REF)/H_REF); };
+	std::function<ddd> n = [](double x, double z){ return 1 + N_REF*exp(-(sqrt(sq((1/RR)*x) + sq(z))-R_REF)/H_REF); };
 	Planet2D p(R, r_max, obf, n);
 
 	if(argc == 1){
@@ -69,7 +70,7 @@ int main(int argc, char* argv[])
 		int N = 10000000;
 		double a, h = (1-0.98)*a_init/(double)N;
 		std::array<double, 2> init = {a_init, 0};
-		std::array<double, 2> ex = rayTracing(p2, L, init);
+		std::array<double, 2> ex = ARCSEC*rayTracing(p2, L, init);
 
 		for(int i = 0; i < N; ++i){
 			a = a_init - i*h;
@@ -78,22 +79,16 @@ int main(int argc, char* argv[])
 		}
 
 		Print("X angle: " << 180*init[X]/M_PI << "; Y angle: " << init[Y]);
-		Print("X angle: " << 180*ex[X]/M_PI << "; Y angle: " << ex[Y]);
+		Print("X angle: " << ex[X] << "; Y angle: " << ex[Y]);
 	}
 	else if(!strcmp(argv[1], "4")){
 		std::function<dddd> n2 = [](double x, double y, double z){ return 1 + N_REF*exp(-(sqrt(sq((1/RR)*x) + y*y + z*z)-R_REF)/H_REF); };
 		Planet3D p2(R, r_max, obf, n2);
-		std::array<double, 2> init = {a_init, 0}, ex;
-		double e;
+		QApplication a(argc, argv);
+		ImageGen w(p2, L, 600);
 
-		Print("2D");
-		e = ray_tracer2D(n, R, r_max, obf, L, a_init);
-
-		Print("3D");
-		ex = rayTracing(p2, L, init);
-
-		Print("2D angle:" << 180*e/M_PI);
-		Print("X angle: " << 180*ex[X]/M_PI << "; Y angle: " << ex[Y]);
+		w.show();
+		a.exec();
 	}
 
 	return 0;
