@@ -18,8 +18,6 @@
 #include <QHeaderView>
 #include <QBrush>
 
-#include <array>
-
 #include "qcustomplot.hpp"
 #include "terrascope2D.hpp"
 
