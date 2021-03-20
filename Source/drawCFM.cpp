@@ -1,5 +1,7 @@
 #include "drawCFM.hpp"
 
+#define OP 0.06
+
 ImageGen::ImageGen(const Planet3D& p, const double& L, const int& N) : p(p), L(L), N(N)
 {
 	grid = new QGridLayout(this);
@@ -23,7 +25,7 @@ void ImageGen::drawCFM()
 	QCPMarginGroup *marginGroup = new QCPMarginGroup(plt);
 	double **data = createMatrix<double>(N+1);
 	double max = acos(sqrt(1 - sq(p.r_max/L)));
-	double min = acos(sqrt(1 - sq(p.R/L))), opt = 0;
+	double min = acos(sqrt(1 - sq(p.R/L)));// opt = 0;
 	double dt = (max - min)/n_tet, h = 2*OP*max/N;
 	double dphi = 1/((double)n_phi-1);
 	std::chrono::time_point<std::chrono::system_clock> start, end;
@@ -45,7 +47,7 @@ void ImageGen::drawCFM()
 	start = std::chrono::system_clock::now();
 	for(int i = 0; i < n_phi; ++i){
 		angle[PHI] = 2*M_PI*i*dphi - M_PI/2;
-		angle[TET] = (opt)?opt:max;
+		angle[TET] = max;
 		in_picture = false;
 		do{
 			++ray_conter;
@@ -56,7 +58,7 @@ void ImageGen::drawCFM()
 			if(ij[X] >= 0 && ij[Y] >= 0 && ij[X] < N+1 && ij[Y] < N+1){
 				if(!in_picture){
 					in_picture = true;
-					if(!opt) opt = angle[TET];
+					//if(!opt) opt = angle[TET];
 				}
 				data[ij[X]][ij[Y]] += 1;
 			}

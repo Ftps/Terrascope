@@ -5,8 +5,11 @@
 #define R_REF 2200
 #define H_REF 25
 #define OBF 0.003292568
-//#define OBF 0
+#define OBFX 0.003292568
+#define OBFY 0.01
 #define RR (1 - OBF)
+#define RRX (1 - OBFX)
+#define RRY (1 - OBFY)
 
 int main(int argc, char* argv[])
 {
@@ -65,7 +68,7 @@ int main(int argc, char* argv[])
 	}
 	else if(!strcmp(argv[1], "3")){ // Testing purposes
 		std::function<dddd> n2 = [](double x, double y, double z){ return 1 + N_REF*exp(-(sqrt(sq((1/RR)*x) + y*y + z*z)-R_REF)/H_REF); };
-		Planet3D p2(R, r_max, obf, n2);
+		Planet3D p2(R, r_max, OBFX, OBFY, {M_PI/4, 0}, n2);
 		int N = 10000000;
 		double a, h = (1-0.98)*a_init/(double)N;
 		std::array<double, 2> init = {a_init, 0};
@@ -81,8 +84,8 @@ int main(int argc, char* argv[])
 		Print("X angle: " << ex[X] << "; Y angle: " << ex[Y]);
 	}
 	else if(!strcmp(argv[1], "4")){
-		std::function<dddd> n2 = [](double x, double y, double z){ return 1 + N_REF*exp(-(sqrt(sq((1/RR)*x) + y*y + z*z)-R_REF)/H_REF); };
-		Planet3D p2(R, r_max, obf, n2);
+		std::function<dddd> n2 = [](double x, double y, double z){ return 1 + N_REF*exp(-(sqrt(sq((1/RRX)*x) + sq((1/RRY)*y) + z*z)-R_REF)/H_REF); };
+		Planet3D p2(R, r_max, OBFX, OBFY, {M_PI/4, M_PI/5}, n2);
 		QApplication a(argc, argv);
 		ImageGen w(p2, L, 300);
 
