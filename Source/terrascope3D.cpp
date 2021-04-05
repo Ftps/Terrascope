@@ -1,22 +1,22 @@
 #include "terrascope3D.hpp"
 
-Planet3D::Planet3D(const double &R, const double& r_max, const double& obf_x, const double& obf_y, const std::array<double, 2> r, const std::function<dddd>& n_ref) : R(R), R2(sq(R)), r_max(r_max), r2_max(sq(r_max)), betax(1/(1-obf_x)), betay(1/(1-obf_y))
+Planet3D::Planet3D(const double &R, const double& r_max, const double& obf_y, const double& obf_z, const std::array<double, 3>& r, const FDIV& n_ref) : R(R), R2(sq(R)), r_max(r_max), r2_max(sq(r_max)), betay(1/(1+obf_y)), betaz(1/(1+obf_z)), n(n_ref)
 {
-	if(rot[TET] || rot[PHI]){
+	if(r[TET] || r[PHI]){
 		dev = true;
 		rot[X][X] = cos(r[TET]);
-		rot[X][Y] = sin(r[TET])*sin(r[PHI]);
-		rot[X][Z] = sin(r[TET])*cos(r[PHI]);
+		rot[X][Y] = 0;
+		rot[X][Z] = sin(r[TET]);
 
-		rot[Y][X] = 0;
+		rot[Y][X] = sin(r[PHI])*sin(r[TET]);
 		rot[Y][Y] = cos(r[PHI]);
-		rot[Y][Z] = -sin(r[PHI]);
+		rot[Y][Z] = -sin(r[PHI])*cos(r[TET]);
 
-		rot[Z][X] = -sin(r[TET]);
-		rot[Z][Y] = cos(r[TET])*sin(r[PHI]);
+		rot[Z][X] = -sin(r[TET])*cos(r[PHI]);
+		rot[Z][Y] = sin(r[PHI]);
 		rot[Z][Z] = cos(r[TET])*cos(r[PHI]);
 
-		rotate = [this](std::array<double, 3> pos_init){
+		rotate = [this](const std::array<double, 3>& pos_init){
 			std::array<double, 3> pos = {0, 0, 0};
 			for(int i = 0; i < 3; ++i){
 				for(int j = 0; j < 3; ++j){
@@ -25,60 +25,58 @@ Planet3D::Planet3D(const double &R, const double& r_max, const double& obf_x, co
 			}
 			return pos;
 		};
-
-		n = [this, n_ref](double x, double y, double z){
-			std::array<double, 3> pos = rotate({x,y,z});
-			return n_ref(pos[X], pos[Y], pos[Z]);
+		arotate = [this](const std::array<double, 3>& pos_init){
+			std::array<double, 3> pos = {0, 0, 0};
+			for(int i = 0; i < 3; ++i){
+				for(int j = 0; j < 3; ++j){
+					pos[i] += rot[j][i]*pos_init[j];
+				}
+			}
+			return pos;
 		};
 	}
 	else{
 		dev = false;
-		n = n_ref;
+		rotate = [](const std::array<double, 3>& pos_init){ return pos_init; };
+		arotate = [](const std::array<double, 3>& pos_init){ return pos_init; };
 	}
+
+	if(r[PSI]){
+		prot[X][X] = cos(r[PSI]);
+		prot[X][Y] = -sin(r[PSI]);
+
+		prot[Y][X] = sin(r[PSI]);
+		prot[Y][Y] = cos(r[PSI]);
+
+		protate = [this](const std::array<double, 3>& pos_init){
+			std::array<double, 3> pos = {0, 0, pos_init[Z]};
+			pos[X] = prot[X][X]*pos_init[X] + prot[X][Y]*pos_init[Y];
+			pos[Y] = prot[Y][X]*pos_init[X] + prot[Y][Y]*pos_init[Y];
+
+			return pos;
+		};
+	}
+	else{
+		protate = [](const std::array<double, 3>& pos_init){ return pos_init; };
+	}
+
 
 }
 
-double Planet3D::checkDistance(double x, double y, double z) const
+double Planet3D::checkDistance(const std::array<double,3>& pos) const
 {
-	double r;
-
-	if(dev){
-		std::array<double,3> pos = rotate({x,y,z});
-		x = pos[X];
-		y = pos[Y];
-		z = pos[Z];
-	}
-
-	r = sq(betax*x) + sq(betay*y) + z*z;
+	double r = sq(pos[X]) + sq(betay*pos[Y]) + sq(betaz*pos[Z]);
 
 	if(r < R2) return 0;
 	else return r;
 }
 
-double Planet3D::checkRayHit(const double& L, const double& vx, const double& vy, const double& vz) const
+double Planet3D::checkRayHit(const std::array<double, 3>& pos, const std::array<double, 3>& vel) const
 {
-	std::array<double, 3> vel = rotate({vx, vy, vz}), pos = rotate({0,0,-L});
-	double a = sq(betax*vel[X]) + sq(betay*vel[Y]) + sq(vel[Z]);
-	double b = sq(betax)*pos[X]*vel[X] + sq(betay)*pos[Y]*vel[Y] + pos[Z]*vel[Z];
-	double c = sq(betax*pos[X]) + sq(betay*pos[Y]) + sq(pos[Z]) - r2_max;
+	double a = sq(vel[X]) + sq(betay*vel[Y]) + sq(betaz*vel[Z]);
+	double b = pos[X]*vel[X] + sq(betay)*pos[Y]*vel[Y] + sq(betaz)*pos[Z]*vel[Z];
+	double c = sq(pos[X]) + sq(betay*pos[Y]) + sq(betaz*pos[Z]) - r2_max;
 	double det = sq(b) - a*c;
-
-	/*Print("rxx = " << rot[X][X]);
-	Print("rxy = " << rot[X][Y]);
-	Print("rxz = " << rot[X][Z]);
-	Print("ryx = " << rot[Y][X]);
-	Print("ryy = " << rot[Y][Y]);
-	Print("ryz = " << rot[Y][Z]);
-	Print("rzx = " << rot[Z][X]);
-	Print("rzy = " << rot[Z][Y]);
-	Print("rzz = " << rot[Z][Z]);
-
-	Print(L);
-	Print("vx = " << vx <<", vy = " << vy << ", vz = " << vz);
-	Print("x = " << pos[X] <<", y = " << pos[Y] << ", z = " << pos[Z]);
-	Print("vx = " << vel[X] <<", vy = " << vel[Y] << ", vz = " << vel[Z]);
-	Print(det);
-	getchar();*/
 
 	if(det < 0) return 0;
 
@@ -87,42 +85,37 @@ double Planet3D::checkRayHit(const double& L, const double& vx, const double& vy
 }
 
 
-std::array<double,2> rayTracing(const Planet3D& p, const double& L, const std::array<double,2>& a, const double& dz)
+std::array<double,2> rayTracing(const Planet3D& p, const double& H, const double& L, const std::array<double,2>& a, const double& dt)
 {
-	double vx, vy, vz, x, y, z, n2, gx, gy, dvx, dvy, r;
-	double ct = cos(a[TET]), st = sin(a[TET]), cp = cos(a[PHI]);
-	double k;
+	double n2, n1, r, k, st = sin(a[TET]);
+	std::array<double, 3> vel, pos, gn, dv;
 
-	vx = st*cp;
-	vy = st*sin(a[PHI]);
-	vz = ct;
+	vel = p.rotate({st*cos(a[PHI]), st*sin(a[PHI]), cos(a[TET])});	//
+	pos = p.rotate({H, 0, -L});										// rotate velocity and position to planet's reference frame
 
-	if(!(k = p.checkRayHit(L, vx, vy, vz))) return a;
+	if(!(k = p.checkRayHit(pos, vel))){				// check if the ray enters the planet
+		vel = p.protate(vel);
+		return {atan(vel[X]/vel[Z]), atan(vel[Y]/vel[Z])}; // if not, return angles to the original reference frame
+	}
 
-	x = k*vx;
-	y = k*vy;
-	z = k*vz - L;
+	pos = k*vel + pos;		// update position to the atmosphere's entry point
 
 	do{
-		n2 = 1/(vz*sq(p.n(x, y, z)));
-		gx = gx3D(p.n, x, y, z);
-		gy = gy3D(p.n, x, y, z);
+		n1 = 1/p.n.f(pos);		//
+		n2 = sq(n1);			// necessary constants
+		gn = p.n.df(pos);	// gradient of the refraction index
 
-		k = gx*vx + gy*vy + gz3D(p.n, x, y, z)*vz;
-		dvx = n2*(gx - k*vx);
-		dvy = n2*(gy - k*vy);
+		k = gn*vel;			// inner product between the gradient and the veloicty unit vector
+		dv = n2*(gn - k*vel);	// derivative of the velocity unit vector
 
-		vx += dvx*dz;
-		vy += dvy*dz;
-		vz = sqrt(1 - vx*vx - vy*vy);
+		vel += dt*dv;		// update velocity
+		pos += (n1*dt)*vel;	// update position
 
-		x += vx*dz/vz;
-		y += vy*dz/vz;
-		z += dz;
+		if(!(r = p.checkDistance(pos))) return {-100, -100};	// check if inside the planet, if not return inside planet value {-100, -100}
 
-		if(!(r = p.checkDistance(x, y, z))) return {-100, -100};
+	}while(r < p.r2_max);	// check if outside the atmosphere
 
-	}while(r < p.r2_max);
+	vel = p.protate(p.arotate(vel));	// rotate velocity back to original reference frame
 
-	return {atan(vx/vz), atan(vy/vz)};
+	return {atan(vel[X]/vel[Z]), atan(vel[Y]/vel[Z])};	// return exit angles
 }

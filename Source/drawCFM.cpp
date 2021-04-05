@@ -1,8 +1,6 @@
 #include "drawCFM.hpp"
 
-#define OP 0.06
-
-ImageGen::ImageGen(const Planet3D& p, const double& L, const int& N) : p(p), L(L), N(N)
+ImageGen::ImageGen(const Planet3D& p, const double& L, const double& S, const int& N) : p(p), L(L), S(S), N(N)
 {
 	grid = new QGridLayout(this);
 	plt = new QCustomPlot(this);
@@ -17,7 +15,7 @@ ImageGen::ImageGen(const Planet3D& p, const double& L, const int& N) : p(p), L(L
 void ImageGen::drawCFM()
 {
 	int n_phi = 10*N;
-	int n_tet = 10*n_phi, ray_conter = 0;
+	int n_tet = 10000*N/S, ray_counter = 0;
 	std::array<double, 2> angle, ex;
 	std::array<int, 2> ij;
 	QCPColorMap *colorMap = new QCPColorMap(plt->xAxis, plt->yAxis);
@@ -25,19 +23,20 @@ void ImageGen::drawCFM()
 	QCPMarginGroup *marginGroup = new QCPMarginGroup(plt);
 	double **data = createMatrix<double>(N+1);
 	double max = acos(sqrt(1 - sq(p.r_max/L)));
-	double min = acos(sqrt(1 - sq(p.R/L)));// opt = 0;
-	double dt = (max - min)/n_tet, h = 2*OP*max/N;
-	double dphi = 1/((double)n_phi-1);
+	double min = acos(sqrt(1 - sq(p.R/L))), opt = 0;
+	double dt = (max - min)/n_tet, scale = S/L;
+	double dphi = 1/((double)n_phi-1), hh = 0, h = scale/N;
 	std::chrono::time_point<std::chrono::system_clock> start, end;
 	std::chrono::duration<double> t;
 	bool in_picture;
 
 	plt->axisRect()->setupFullAxesBox(true);
-	plt->xAxis->setLabel("x - km");
-	plt->yAxis->setLabel("y - km");
+	plt->xAxis->setLabel("y - km");
+	plt->yAxis->setLabel("x - km");
+	plt->xAxis->setScaleRatio(plt->yAxis, 1);
 
 	colorMap->data()->setSize(N+1, N+1);
-	colorMap->data()->setRange(QCPRange(-OP*L*max, OP*L*max), QCPRange(-OP*L*max, OP*L*max));
+	colorMap->data()->setRange(QCPRange(-S, S), QCPRange(-S, S));
 
 	/*colorMap->data()->cellToCoord(N/2, N/2, &x, &y);
 	Print(1.5*max);
@@ -47,18 +46,20 @@ void ImageGen::drawCFM()
 	start = std::chrono::system_clock::now();
 	for(int i = 0; i < n_phi; ++i){
 		angle[PHI] = 2*M_PI*i*dphi - M_PI/2;
-		angle[TET] = max;
+		if(p.dev) angle[TET] = ((opt)?(0.97*opt+0.03*max):max) - hh*cos(angle[PHI])/L;
+		else angle[TET] = (opt)?opt:max - hh*cos(angle[PHI])/L;
 		in_picture = false;
 		do{
-			++ray_conter;
-			ex = rayTracing(p, L, angle);
-			ij[X] = (int)(N*(ex[X] + OP*max + OP*h)/(2*OP*max));
-			ij[Y] = (int)(N*(ex[Y] + OP*max + OP*h)/(2*OP*max));
+			++ray_counter;
+			ex = rayTracing(p, hh, L, angle);
+
+			ij[X] = (int)(N*(ex[X] + scale + h + hh/L)/(2*scale));
+			ij[Y] = (int)(N*(ex[Y] + scale + h)/(2*scale));
 
 			if(ij[X] >= 0 && ij[Y] >= 0 && ij[X] < N+1 && ij[Y] < N+1){
 				if(!in_picture){
 					in_picture = true;
-					//if(!opt) opt = angle[TET];
+					if(!(opt))/* || p.dev))*/ {opt = angle[TET];}
 				}
 				data[ij[X]][ij[Y]] += 1;
 			}
@@ -67,7 +68,7 @@ void ImageGen::drawCFM()
 			angle[TET] -= dt;
 		}while(ex[X] != -100);
 		Print(i+1 << " out of " << n_phi);
-		Print("Ray count: " << ray_conter << std::endl);
+		Print("Ray count: " << ray_counter << std::endl);
 	}
 	end = std::chrono::system_clock::now();
 	t = end - start;
@@ -75,14 +76,14 @@ void ImageGen::drawCFM()
 
 	for(int i = 0; i < N+1; ++i){
 		for(int j = 0; j < N+1; ++j){
-			colorMap->data()->setCell(j, i, data[i][j]*dphi*dt/sq(h));
+			colorMap->data()->setCell(i, j, data[j][i]*sq(L*h)/(sq(p.r_max)*dphi*dt));
 		}
 	}
 
 	plt->plotLayout()->addElement(0, 1, colorScale);
 	colorScale->setType(QCPAxis::atRight);
 	colorMap->setColorScale(colorScale);
-	colorScale->axis()->setLabel("Ray density");
+	colorScale->axis()->setLabel("Amplification Factor");
 	colorMap->setGradient(redGrad());
 	colorMap->setInterpolate(true);
 	colorMap->rescaleDataRange();

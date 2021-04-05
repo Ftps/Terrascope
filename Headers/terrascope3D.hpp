@@ -3,27 +3,20 @@
 
 #include "auxiliar.hpp"
 
-#define X 0
-#define Y 1
-#define Z 2
-#define TET 0
-#define PHI 1
-
-
 class Planet3D {
 	public:
-		const double R, R2, r_max, r2_max, betax, betay;
-		double rot[3][3];
-		std::function<dddd> n;
+		const double R, R2, r_max, r2_max, betay, betaz;
+		FDIV n;
+		double rot[3][3], prot[2][2];
 		bool dev;
-		std::function<std::array<double,3>(std::array<double,3>)> rotate;
+		std::function<std::array<double,3>(std::array<double,3>)> rotate, arotate, protate;
 
-		Planet3D(const double &R, const double& r_max, const double& obf_x, const double& obf_y, const std::array<double, 2> r, const std::function<dddd>& n);
-		double checkDistance(double x, double y, double z) const;
-		double checkRayHit(const double& L, const double& vx, const double& vy, const double& vz) const;
+		Planet3D(const double &R, const double& r_max, const double& obf_y, const double& obf_z, const std::array<double, 3>& r, const FDIV& n);
+		double checkDistance(const std::array<double, 3>& pos) const;
+		double checkRayHit(const std::array<double, 3>& pos, const std::array<double, 3>& vel) const;
 };
 
 
-std::array<double,2> rayTracing(const Planet3D& p, const double& L, const std::array<double,2>& a, const double& dz = 10);
+std::array<double,2> rayTracing(const Planet3D& p, const double& H, const double& L, const std::array<double,2>& a, const double& dt = 10);
 
 #endif
