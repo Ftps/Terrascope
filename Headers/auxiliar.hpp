@@ -19,6 +19,7 @@
 #define X 0
 #define Y 1
 #define Z 2
+#define BRT 2
 #define TET 0
 #define PHI 1
 #define PSI 2

@@ -85,9 +85,9 @@ double Planet3D::checkRayHit(const std::array<double, 3>& pos, const std::array<
 }
 
 
-std::array<double,2> rayTracing(const Planet3D& p, const double& H, const double& L, const std::array<double,2>& a, const double& dt)
+std::array<double,3> rayTracing(const Planet3D& p, const double& H, const double& L, const std::array<double,2>& a, const double& dt)
 {
-	double n2, n1, r, k, st = sin(a[TET]);
+	double n2, n1, r, k, l = 0, st = sin(a[TET]);
 	std::array<double, 3> vel, pos, gn, dv;
 
 	vel = p.rotate({st*cos(a[PHI]), st*sin(a[PHI]), cos(a[TET])});	//
@@ -95,7 +95,7 @@ std::array<double,2> rayTracing(const Planet3D& p, const double& H, const double
 
 	if(!(k = p.checkRayHit(pos, vel))){				// check if the ray enters the planet
 		vel = p.protate(vel);
-		return {atan(vel[X]/vel[Z]), atan(vel[Y]/vel[Z])}; // if not, return angles to the original reference frame
+		return {atan(vel[X]/vel[Z]), atan(vel[Y]/vel[Z]), 1}; // if not, return angles to the original reference frame
 	}
 
 	pos = k*vel + pos;		// update position to the atmosphere's entry point
@@ -103,13 +103,15 @@ std::array<double,2> rayTracing(const Planet3D& p, const double& H, const double
 	do{
 		n1 = 1/p.n.f(pos);		//
 		n2 = sq(n1);			// necessary constants
-		gn = p.n.df(pos);	// gradient of the refraction index
 
+		gn = p.n.df(pos);	// gradient of the refraction index
 		k = gn*vel;			// inner product between the gradient and the veloicty unit vector
+
 		dv = n2*(gn - k*vel);	// derivative of the velocity unit vector
 
 		vel += dt*dv;		// update velocity
 		pos += (n1*dt)*vel;	// update position
+		l += n1*dt;
 
 		if(!(r = p.checkDistance(pos))) return {-100, -100};	// check if inside the planet, if not return inside planet value {-100, -100}
 
@@ -117,5 +119,5 @@ std::array<double,2> rayTracing(const Planet3D& p, const double& H, const double
 
 	vel = p.protate(p.arotate(vel));	// rotate velocity back to original reference frame
 
-	return {atan(vel[X]/vel[Z]), atan(vel[Y]/vel[Z])};	// return exit angles
+	return {atan(vel[X]/vel[Z]), atan(vel[Y]/vel[Z]), 1};	// return exit angles
 }

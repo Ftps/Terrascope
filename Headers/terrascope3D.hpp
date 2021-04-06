@@ -17,6 +17,6 @@ class Planet3D {
 };
 
 
-std::array<double,2> rayTracing(const Planet3D& p, const double& H, const double& L, const std::array<double,2>& a, const double& dt = 10);
+std::array<double,3> rayTracing(const Planet3D& p, const double& H, const double& L, const std::array<double,2>& a, const double& dt = 10);
 
 #endif

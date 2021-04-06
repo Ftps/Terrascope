@@ -14,8 +14,8 @@ int main(int argc, char* argv[])
 	double r_max = R + 15*H;	// top layer of the atmosphere
 	double L = 150000000;
 	FDIV n = generateRefFuncs(N_REF, H, R, OBFY, OBFZ);
-	std::array<double, 3> r = {0, 0, 0};
-	double size = 100;
+	std::array<double, 3> r = {0, 0, M_PI/10};
+	double size = 50;
 	int res = 400;
 
 	Planet3D p(R, r_max, OBFY, OBFZ, r, n);

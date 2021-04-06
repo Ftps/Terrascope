@@ -16,8 +16,9 @@ void ImageGen::drawCFM()
 {
 	int n_phi = 10*N;
 	int n_tet = 10000*N/S, ray_counter = 0;
-	std::array<double, 2> angle, ex;
+	std::array<double, 2> angle;
 	std::array<int, 2> ij;
+	std::array<double, 3> ex;
 	QCPColorMap *colorMap = new QCPColorMap(plt->xAxis, plt->yAxis);
 	QCPColorScale *colorScale = new QCPColorScale(plt);
 	QCPMarginGroup *marginGroup = new QCPMarginGroup(plt);
@@ -61,7 +62,7 @@ void ImageGen::drawCFM()
 					in_picture = true;
 					if(!(opt))/* || p.dev))*/ {opt = angle[TET];}
 				}
-				data[ij[X]][ij[Y]] += 1;
+				data[ij[X]][ij[Y]] += ex[BRT];
 			}
 			else if(in_picture) break;
 
