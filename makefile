@@ -5,7 +5,7 @@ LIBS = -Lqcustomplot -lm -lqcustomplot -lboost_system -lboost_filesystem -lpthre
 HEAD = ./Headers
 SRCS = ./Source
 INCDIRS = -I/usr/include/qt -I/usr/include/qt/QtWidgets -I/usr/include/qt/QtCore -I/usr/include/qt/QtGui -I$(HEAD)
-CFLAGS = -Wall -pedantic -O3 -fPIC -std=c++17 $(INCDIRS)
+CFLAGS = -g -Wall -pedantic -O3 -fPIC -std=c++17 $(INCDIRS)
 .PHONY: clean
 
 DEPS = $(wildcard $(HEAD)/*.hpp)

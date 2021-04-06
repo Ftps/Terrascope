@@ -1,94 +1,29 @@
-#include "drawRay.hpp"
 #include "drawCFM.hpp"
 
 #define N_REF 0.000293
-#define R_REF 2200
+#define R_REF 2500
 #define H_REF 25
 #define OBF 0.003292568
-//#define OBF 0
-#define RR (1 - OBF)
+#define OBFY 0.003292568
+#define OBFZ 0.003292568
 
 int main(int argc, char* argv[])
 {
 	double R = R_REF;			// planet radius
 	double H = H_REF;			// atmospheric scale height
 	double r_max = R + 15*H;	// top layer of the atmosphere
-	double obf = OBF;
 	double L = 150000000;
-	double a_init = 0.5*(R + r_max)/L;
-	std::function<ddd> n = [](double x, double z){ return 1 + N_REF*exp(-(sqrt(sq((1/RR)*x) + sq(z))-R_REF)/H_REF); };
-	Planet2D p(R, r_max, obf, n);
+	FDIV n = generateRefFuncs(N_REF, H, R, OBFY, OBFZ);
+	std::array<double, 3> r = {0, 0, M_PI/10};
+	double size = 50;
+	int res = 400;
 
-	if(argc == 1){
-		int type;
-		char b[2];
+	Planet3D p(R, r_max, OBFY, OBFZ, r, n);
+	QApplication a(argc, argv);
+	ImageGen w(p, L, size, res);
 
-		QApplication a(argc, argv);
-
-		try {
-			Print("Input graph number (1 - ray density, 2 - multiple horizontal rays, 3 - single ray)");
-			fgets(b, 2, stdin);
-			type = std::atoi(b);
-		}
-		catch(...) {
-			type = 1;
-		}
-
-		DrawRay w(p, L, a_init, type);
-		w.show();
-
-		a.exec();
-	}
-	else if(!strcmp(argv[1], "1")){
-		int N = 10000000;
-		double a, h = (1-0.98)*a_init/(double)N;
-
-		Ray2D ray(p);
-
-		ray.ray_tracer(L, a_init);
-
-		for(int i = 0; i <= N; ++i){
-			a = a_init - i*h;
-			//if(!(i % 100000)) Print(i);
-			ray_tracer2D(n, R, r_max, obf, L, a, 10);
-		}
-
-		Print("\nSingle ray test:");
-		Print("Entry ray angle: " << ray.a_entry << " º");
-		Print("Exit ray angle: " << ray.a_exit << " º");
-		Print("Surface level refractivity of " << N_REF);
-	}
-	else if(!strcmp(argv[1], "2")){
-		int N = 1000;
-
-		Print(focalPoint(p, N));
-	}
-	else if(!strcmp(argv[1], "3")){ // Testing purposes
-		std::function<dddd> n2 = [](double x, double y, double z){ return 1 + N_REF*exp(-(sqrt(sq((1/RR)*x) + y*y + z*z)-R_REF)/H_REF); };
-		Planet3D p2(R, r_max, obf, n2);
-		int N = 10000000;
-		double a, h = (1-0.98)*a_init/(double)N;
-		std::array<double, 2> init = {a_init, 0};
-		std::array<double, 2> ex = ARCSEC*rayTracing(p2, L, init);
-
-		for(int i = 0; i < N; ++i){
-			a = a_init - i*h;
-			if(!(i % 100000)) Print(i);
-			rayTracing(p2, L, {a,0});
-		}
-
-		Print("X angle: " << 180*init[X]/M_PI << "; Y angle: " << init[Y]);
-		Print("X angle: " << ex[X] << "; Y angle: " << ex[Y]);
-	}
-	else if(!strcmp(argv[1], "4")){
-		std::function<dddd> n2 = [](double x, double y, double z){ return 1 + N_REF*exp(-(sqrt(sq((1/RR)*x) + y*y + z*z)-R_REF)/H_REF); };
-		Planet3D p2(R, r_max, obf, n2);
-		QApplication a(argc, argv);
-		ImageGen w(p2, L, 300);
-
-		w.show();
-		a.exec();
-	}
+	w.show();
+	a.exec();
 
 	return 0;
 }

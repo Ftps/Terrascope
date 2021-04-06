@@ -50,3 +50,50 @@ double gz3D(const std::function<dddd>& f, const double& x, const double& y, cons
 {
 	return (f(x, y, z+h) - f(x, y, z-h))/(2*h);
 }
+
+std::function<dddd> generateRefIndex(const double& n_surf, const double& H, const double& R, const double& obf_y, const double& obf_z)
+{
+	std::function<dddd> n;
+	double betay = 1/(1 + obf_y);
+	double betaz = 1/(1 + obf_z);
+
+	n = [n_surf, H, R, betay, betaz](double x, double y, double z){
+			return 1 + n_surf*exp(-(sqrt(sq(x) + sq(betay*y) + sq(betaz*z)) - R)/H);
+	};
+
+	return n;
+}
+
+FDIV generateRefFuncs(const double& n_surf, const double& H, const double& R, const double& obf_y, const double& obf_z)
+{
+	FDIV n;
+	double betay = 1/(1 + obf_y);
+	double betaz = 1/(1 + obf_z);
+
+	n.f = [n_surf, H, R, betay, betaz](std::array<double,3> r){
+			return 1 + n_surf*exp(-(sqrt(sq(r[X]) + sq(betay*r[Y]) + sq(betaz*r[Z])) - R)/H);
+	};
+
+	n.df = [n_surf, H, R, betay, betaz](std::array<double,3> r){
+		double rr = sqrt(sq(r[X]) + sq(betay*r[Y]) + sq(betaz*r[Z]));
+		std::array<double, 3> rl = {r[X], betay*r[Y], betaz*r[Z]};
+
+		return (-n_surf*exp(-(rr-R)/H)/(rr*H))*rl;
+	};
+
+	return n;
+}
+
+std::ostream& operator<<(std::ostream& os, const std::array<double, 3>& v)
+{
+	os << "[ ";
+
+	for(int i = 0; i < 3; ++i){
+		os << v[i];
+		if(i != 2) os << ", ";
+	}
+
+	os << " ]";
+
+	return os;
+}

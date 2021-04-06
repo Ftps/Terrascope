@@ -16,20 +16,20 @@
 #include <QBrush>
 
 #include <chrono>
+#include <thread>
 
 #include "qcustomplot.hpp"
 #include "terrascope3D.hpp"
 
 #define ARCSEC 206264.806247
-#define OP 0.05
 
 class ImageGen : public QWidget {
 	public:
-		ImageGen(const Planet3D& p, const double& L, const int& N = 200);
+		ImageGen(const Planet3D& p, const double& L, const double& S, const int& N = 200);
 
 	private:
 		const Planet3D p;
-		const double L;
+		const double L, S;
 		const int N;
 
 		QGridLayout *grid;
