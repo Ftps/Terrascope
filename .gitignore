@@ -5,3 +5,5 @@ qcustomplot/c*
 exe
 *.tar.gz
 Results
+*.zip
+qwtplot3d

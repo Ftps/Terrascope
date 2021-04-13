@@ -25,11 +25,11 @@
 
 class ImageGen : public QWidget {
 	public:
-		ImageGen(const Planet3D& p, const double& L, const double& S, const int& N = 200);
+		ImageGen(const Planet3D& p, const double& l, const double& L, const double& S, const int& N = 200);
 
 	private:
-		const Planet3D p;
-		const double L, S;
+		Planet3D p;
+		const double L, S, l;
 		const int N;
 
 		QGridLayout *grid;

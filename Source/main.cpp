@@ -11,16 +11,17 @@ int main(int argc, char* argv[])
 {
 	double R = R_REF;			// planet radius
 	double H = H_REF;			// atmospheric scale height
-	double r_max = R + 15*H;	// top layer of the atmosphere
-	double L = 150000000;
+	//double r_max = R + 15*H;	// top layer of the atmosphere
+	double L = 1500000;
+	double N = 2e25;
 	FDIV n = generateRefFuncs(N_REF, H, R, OBFY, OBFZ);
-	std::array<double, 3> r = {0, 0, M_PI/10};
-	double size = 50;
-	int res = 400;
+	std::array<double, 3> r = {0, 0, 0};
+	double size = 50, l = 200e-9;
+	int res = 200;
 
-	Planet3D p(R, r_max, OBFY, OBFZ, r, n);
+	Planet3D p(R, H, N, OBFY, OBFZ, r, n);
 	QApplication a(argc, argv);
-	ImageGen w(p, L, size, res);
+	ImageGen w(p, l, L, size, res);
 
 	w.show();
 	a.exec();

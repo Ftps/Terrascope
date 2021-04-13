@@ -1,6 +1,6 @@
 #include "drawCFM.hpp"
 
-ImageGen::ImageGen(const Planet3D& p, const double& L, const double& S, const int& N) : p(p), L(L), S(S), N(N)
+ImageGen::ImageGen(const Planet3D& p, const double& l, const double& L, const double& S, const int& N) : p(p), L(L), S(S), l(l), N(N)
 {
 	grid = new QGridLayout(this);
 	plt = new QCustomPlot(this);
@@ -44,6 +44,10 @@ void ImageGen::drawCFM()
 	Print("x = " << x);
 	Print("y = " << y);*/
 
+	p.updateSigma(l);
+	Print(p.o);
+	LOG
+	getchar();
 	start = std::chrono::system_clock::now();
 	for(int i = 0; i < n_phi; ++i){
 		angle[PHI] = 2*M_PI*i*dphi - M_PI/2;
