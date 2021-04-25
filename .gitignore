@@ -2,8 +2,13 @@ qcustomplot/documentation
 qcustomplot/examples
 qcustomplot/c*
 *.o
+*.moc.cpp
 exe
 *.tar.gz
 Results
 *.zip
 qwtplot3d
+gnuplot-iostream
+Poly/*
+vgcore*
+*/gmp*
