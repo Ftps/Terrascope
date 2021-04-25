@@ -2,7 +2,7 @@
 
 int main(int argc, char* argv[])
 {
-	int l_max = 80;
+	int l_max = 875;
 	int N = 1500;
 
 	fillNumbers(l_max, N);
