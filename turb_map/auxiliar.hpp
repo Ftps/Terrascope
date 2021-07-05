@@ -26,7 +26,6 @@
 
 #define LOG {std::cout << "IN LINE " << __LINE__  << " OF FILE " << __FILE__ << std::endl; fflush(stdout);}
 #define Print(X) std::cout << X << std::endl
-#define ST(X) std::to_string(X)
 
 struct FDIV{
 	std::function<da> f;
@@ -45,10 +44,6 @@ double gz3D(const std::function<dddd>& f, const double& x, const double& y, cons
 
 std::function<dddd> generateRefIndex(const double& n_surf, const double& H, const double& R, const double& obf_y, const double& obf_z);
 FDIV generateRefFuncs(const double& n_surf, const double& H, const double& R, const double& obf_y, const double& obf_z);
-
-std::array<double, 2> planeIntersect(const std::array<double, 3>& pos, const std::array<double, 3>& vel, const double& L, const double& tet, const double& h);
-std::array<double, 2> linReg(const std::vector<std::pair<double, double>>& xy);
-
 template<typename T>
 inline std::array<T,3> operator*(const double& a, const std::array<T,3>& v)
 {
@@ -94,28 +89,33 @@ inline void operator+=(std::array<T,3>& v, const std::array<double,3>& w)
 }
 
 template<typename T>
-inline double operator*(const std::array<T,3>& v, const std::array<double,3>& w)
+inline double operator*(const std::array<T,3> v, const std::array<double,3> w)
 {
 	return v[0]*w[0] + v[1]*w[1] + v[2]*w[2];
 }
 
-inline std::array<double,3> operator*(const double A[3][3], const std::array<double,3>& b)
+template<typename T>
+T** createMatrix(int N)
 {
-	std::array<double,3> res = {0,0,0};
+	T** m = new T*[N];
 
-	for(int i = 0; i < 3; ++i){
-		for(int j = 0; j < 3; ++j){
-			res[i] += A[i][j]*b[j];
-		}
+	for(int i = 0; i < N; ++i){
+		m[i] = new T[N]();
 	}
 
-	return res;
+	return m;
 }
 
-double** createMatrix(const int& N);
-void freeMatrix(double const* const* m, const int N);
+template<typename T>
+void freeMatrix(T** m, int N)
+{
+	for(int i = 0; i < N; ++i){
+		delete m[i];
+	}
+
+	delete m;
+}
 
 std::ostream& operator<<(std::ostream& os, const std::array<double, 3>& v);
-std::ostream& operator<<(std::ostream& os, const double A[3][3]);
 
 #endif

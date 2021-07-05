@@ -1,21 +1,51 @@
 #include "sphere_harm.hpp"
+#include "../Headers/gnuplot-iostream.hpp"
 
 int main(int argc, char* argv[])
 {
-	int l_max = 875;
-	int N = 1500;
 
-	fillNumbers(l_max, N);
+	int l = 500;
+	int N_min = 1000;
+	int N_max = 3000;
+
+	fillNumbers(l, N_min, N_max);
 
 	verifyCoeff();
 
-	/*int l = 875;
-	long double aux;
-	for(int m = 0; m < l; ++m){
-		std::cout << (aux = coeffFact(l,m)) << std::endl;
-		std::cout << (aux = sqrtl(aux)) << std::endl;
-		std::cout << sqrtl(((2.0*l + 1.0)/(4.0*M_PI)))*aux << std::endl;
-	}*/
+	/*Gnuplot gp;
+	auto plots = gp.plotGroup();
+	int l = 500, m = 0;
+	int N = 3000;
+	double *y = new double[N];
+	long double dx = M_PI/N, aux, coeff;
+	std::vector<std::pair<long double, long double>> xy;
+	std::vector<std::complex<double>> dft;
+
+	aux = sqrtl(coeffFact(l, m));
+	coeff = sqrtl(((2.0*l + 1.0)/(4.0*M_PI)))*aux;
+
+	for(int i = 0; i < N; ++i){
+		y[i] = coeff*ALpoly(cos(i*dx-M_PI/2), m, l, aux);
+	}
+
+	dft = ditfft(y, N);
+
+	for(int i = 0; i < N; ++i){
+		//xy.emplace_back(i/M_PI, 2*std::abs(dft[i])/N);
+		//std::cout << dft[i] << std::endl;
+		xy.emplace_back(i*dx - M_PI/2, coeff*ALpoly(cos(i*dx-M_PI/2), m, l, aux));
+	}
+
+	plots.add_plot1d(xy, "with lines title 'F(P_{" + std::to_string(l) + "}^{" + std::to_string(m) + "})'");
+	//gp << "set xrange [0:" + std::to_string(N/M_PI) + "]\n";
+	gp << "set xrange [-1.58:1.58]\n";
+	gp << plots;
+
+	std::cout << "Max frequency = " << (aux = maxfreq(m, l)) << " rad^-1" << std::endl;
+	std::cout << "Minimum number of points = " << 10*M_PI*aux << std::endl;
+	std::cout << "Smallest wavelength = " << 2200/aux << " km" << std::endl;
+
+	delete y;*/
 
 	return 0;
 }

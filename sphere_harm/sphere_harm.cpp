@@ -1,5 +1,7 @@
 #include "sphere_harm.hpp"
 
+const std::complex<double> i_c(0.0, 1.0);
+
 long double factorial(const int& a)
 {
 	return ((a == 1) || (a == 0)) ? 1.0 : a*factorial(a-1);
@@ -58,23 +60,90 @@ long double sphereHarmIm(const long double& tet, const long double& phi, const i
 	return sin(m*phi)*ALpoly(cos(tet), m, l, prev_LP);
 }
 
-void fillNumbers(const int& l_max, const int& N)
+std::vector<std::complex<double>> ditfft(const double* x, const int& N, const int& s)
+{
+	std::vector<std::complex<double>> res, aux1, aux2;
+	std::complex<double> p(x[0],0), q;
+
+	if(N == 1){
+		res.push_back(p);
+		return res;
+	}
+	aux1 = ditfft(x, N/2, 2*s);
+	aux2 = ditfft(x+s, N/2, 2*s);
+
+	res.resize(N);
+	for(int k = 0; k < N/2; ++k){
+		p = aux1[k];
+		q = aux2[k]*exp(-2*M_PI*i_c*(((double)k)/N));
+		res[k] = p + q;
+		res[k + N/2] = p - q;
+	}
+
+	return res;
+}
+
+double maxfreq(const int& m, const int& l)
+{
+	int N = 2*32768;
+	double *y = new double[N];
+	long double coeff, aux, dx = 2*M_PI/N;
+	double max = 0;
+	int i_max = 0;
+	std::vector<std::complex<double>> dft;
+
+	aux = sqrtl(coeffFact(l, m));
+	coeff = sqrtl(((2.0*l + 1.0)/(4.0*M_PI)))*aux;
+
+	for(int i = 0; i < N; ++i){
+		y[i] = coeff*ALpoly(cos(i*dx-M_PI/2), m, l, aux);
+	}
+
+	dft = ditfft(y, N);
+
+	for(int i = 0; i < N/2; ++i){
+		if(std::abs(dft[i]) > max){
+			max = std::abs(dft[i]);
+			i_max = i;
+		}
+	}
+
+	delete y;
+
+	return i_max/(2*M_PI);
+}
+
+
+
+
+
+
+
+
+
+
+void fillNumbers(const int& l_max, const int& N_min, const int& N_max)
 {
 	std::ofstream fp, fp_coeffs;
-	long double dx = 2.0/(N-1), prev_LP, aux;
+	int N;
+	long double dx, prev_LP, aux;
+	const long double alpha = (N_max - N_min)/(long double)(l_max - 1.0);
 
 	fp_coeffs.open(fileloc + "Coeffs.dat", std::ofstream::out | std::ofstream::trunc);
 	fp_coeffs << l_max << '\n';
 
 	for(int l = 1; l <= l_max; ++l){
 		fp.open(fileloc + "P" + std::to_string(l) + ".dat", std::ofstream::out | std::ofstream::trunc);
+		N = (int)(N_min + alpha*(l-1));
+		dx = 2.0/(N-1);
 		fp << N << '\n';
 		std::cout << "l = " << l << std::endl;
 		for(int m = 0; m <= l; ++m){
 			aux = sqrtl(coeffFact(l, m));
-			fp_coeffs << sqrtl(((2.0*l + 1.0)/(4.0*M_PI)))*aux << " ";
+			aux = sqrtl(((2.0*l + 1.0)/(4.0*M_PI)))*aux;
+			fp_coeffs << aux << " ";
 			for(long double x = -1; x <= 1; x += dx){
-				fp << ALpoly(x, m, l, prev_LP) << " ";
+				fp << aux*ALpoly(x, m, l, prev_LP) << " ";
 			}
 			fp << '\n';
 		}

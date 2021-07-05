@@ -1,13 +1,11 @@
 #ifndef SPHERE_HARM_HPP
 #define SPEHRE_HARM_HPP
 
-#include <cmath>
+#include "auxiliar.hpp"
+
 #include <tgmath.h>
 #include <string>
 #include <fstream>
-#include <vector>
-#include <cstdlib>
-#include <iostream>
 
 #define LOG {std::cout << "IN LINE " << __LINE__ << " OF FILE " << __FILE__ << std::endl; fflush(stdout);}
 

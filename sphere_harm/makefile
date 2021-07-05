@@ -1,6 +1,6 @@
 TARGET = exe
 CC = g++
-LIBS = -lm -lgmp
+LIBS = -lm -lboost_iostreams -lboost_filesystem
 HEAD = .
 SRCS = .
 INCDIRS = -I$(HEAD)

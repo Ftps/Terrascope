@@ -1,6 +1,6 @@
 #include "sphere_harm.hpp"
 
-const std::string file = "./Poly/", ext = ".dat";
+const std::string file = "../Poly/", ext = ".dat";
 
 Poly::Poly(const int& l) : l(l)
 {
@@ -22,7 +22,7 @@ Poly::Poly(const int& l) : l(l)
 	--N;
 }
 
-long double Poly::operator()(const int& m, const long double& x)
+long double Poly::operator()(const int& m, const long double& x) const
 {
 	int i = floor(((x+1)/2.0)*N);
 
@@ -61,9 +61,31 @@ SphereHarm::SphereHarm(const int& max_l) : l_max(max_l)
 	std::cout << "Harmonics loaded." << std::endl;
 }
 
-long double SphereHarm::operator()(const long double& tet, const long double& phi, const int& m, const int& l)
+long double SphereHarm::operator()(const long double& tet, const long double& phi, const int& m, const int& l) const
 {
 	if(m < 0) return poly[l-1](-m, cosl(tet))*sinl(-m*phi);
 	else if(m > 0) return poly[l-1](m, cosl(tet))*cosl(m*phi);
 	return poly[l-1](0, cosl(tet));
+}
+
+long double SphereHarm::gtet(const long double& tet, const long double& phi, const int& m, const int& l) const
+{
+	if(m < 0) return sinl(-m*phi)*(((l > -m) ? poly[l-1](-m+1, cosl(tet)) : 0) - m*cotl(tet)*poly[l-1](-m, cosl(tet)));
+	else if(m > 0) return cosl(m*phi)*(((l > m) ? poly[l-1](m+1, cosl(tet)) : 0) + m*cotl(tet)*poly[l-1](m, cosl(tet)));
+	return poly[l-1](1, cosl(tet));
+}
+
+long double SphereHarm::gphi(const long double& tet, const long double& phi, const int& m, const int& l) const
+{
+	if(m < 0) return -m*poly[l-1](-m, cosl(tet))*cosl(-m*phi);
+	else if(m > 0) return -m*poly[l-1](m, cosl(tet))*sinl(m*phi);
+	return 0;
+}
+
+
+
+
+inline long double cotl(const long double& x)
+{
+	return tanl(M_PI_2 - x);
 }

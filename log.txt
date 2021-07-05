@@ -1,0 +1,8 @@
+/usr/bin/ld: Source/drawCFM.o: in function `ImageGen::drawCFM(Planet3D&)':
+/home/ftps/Documents/TUDelft/Thesis/Terrascope/Terrascope/Source/drawCFM.cpp:59: undefined reference to `rayTracing(Planet3D const&, double const&, double const&, std::array<double, 2ul> const&, double&, bool const&, double const&)'
+/usr/bin/ld: Source/main.o: in function `main':
+/home/ftps/Documents/TUDelft/Thesis/Terrascope/Terrascope/Source/main.cpp:59: undefined reference to `rayTracing(Planet3D const&, double const&, double const&, std::array<double, 2ul> const&, double&, bool const&, double const&)'
+/usr/bin/ld: /home/ftps/Documents/TUDelft/Thesis/Terrascope/Terrascope/Source/main.cpp:86: undefined reference to `rayTracing(Planet3D const&, double const&, double const&, std::array<double, 2ul> const&, double&, bool const&, double const&)'
+/usr/bin/ld: /home/ftps/Documents/TUDelft/Thesis/Terrascope/Terrascope/Source/main.cpp:95: undefined reference to `rayTracing(Planet3D const&, double const&, double const&, std::array<double, 2ul> const&, double&, bool const&, double const&)'
+collect2: error: ld returned 1 exit status
+make: *** [makefile:23: exe] Error 1

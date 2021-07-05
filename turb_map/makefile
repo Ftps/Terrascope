@@ -1,11 +1,11 @@
 TARGET = exe
 CC = g++
 MOC = moc-qt5
-LIBS = -Lqcustomplot -lm -lqcustomplot -lboost_system -lboost_filesystem -lpthread -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -lQt5Widgets -lQt5Gui -lQt5Core -lQt5PrintSupport -lboost_iostreams -lboost_filesystem
-HEAD = ./Headers
-SRCS = ./Source
+LIBS = -L../qcustomplot -lqcustomplot -lm -lboost_system -lboost_filesystem -lpthread -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -lQt5Widgets -lQt5Gui -lQt5Core -lQt5PrintSupport -lboost_iostreams -lboost_filesystem
+HEAD = .
+SRCS = .
 INCDIRS = -I/usr/include/qt -I/usr/include/qt/QtWidgets -I/usr/include/qt/QtCore -I/usr/include/qt/QtGui -I$(HEAD)
-CFLAGS = -g -Wall -pedantic -O3 -fPIC -std=c++17 $(INCDIRS)
+CFLAGS = -g -ggdb3 -Wall -pedantic -O3 -fPIC -std=c++17 $(INCDIRS)
 .PHONY: clean
 
 DEPS = $(wildcard $(HEAD)/*.hpp)
