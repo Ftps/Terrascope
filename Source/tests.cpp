@@ -24,6 +24,7 @@ void bendHeight(const std::vector<double>& n, const double& R, const double& H, 
 		}
 		plot.add_plot1d(xy, "with lines title 'n_0 = " + ST(n[i]) + "'");
 		xy.clear();
+		p.m.destroy();
 	}
 
 	gp1 << "set xrange [0:" << ST(14*H) << "]\n";
@@ -69,6 +70,7 @@ void detecHeight(const std::vector<double>& n, const double& R, const double& H,
 		}while((LL = 1.15*LL) < 1e10);
 		plot.add_plot1d(xy, "with lines title 'n_0 = " + ST(n[i]) + "'");
 		xy.clear();
+		p.m.destroy();
 	}
 
 	gp << "set xrange [1e4:1e10]\n";
@@ -79,7 +81,7 @@ void detecHeight(const std::vector<double>& n, const double& R, const double& H,
 	gp << plot;
 }
 
-void ampWave(const double& n, const double& R, const double& H, const double& N)
+void ampWave(const double& n, const double& R, const double& H, const double& N, const int& n_thread)
 {
 	Gnuplot gp;
 	auto plot = gp.plotGroup();
@@ -97,7 +99,7 @@ void ampWave(const double& n, const double& R, const double& H, const double& N)
 		for(double l = 10e-9; l < 1000e-9; l *= 1.05){
 			p.updateSigma(l);
 			Print("At l = " << l <<", o = " << p.o);
-			map = mapGen2(p, 250, 50, L, 0);
+			map = mapThread(p, 250, 50, L, 0, n_thread);
 
 			xy.emplace_back(l*1e9, findMax(map)/map->Int2);
 			delete map;
@@ -115,9 +117,11 @@ void ampWave(const double& n, const double& R, const double& H, const double& N)
 	gp << "set logscale x\n";
 	gp << "set ylabel \"Max amplification\"\n";
 	gp << plot;
+
+	p.m.destroy();
 }
 
-void horPeaks(const double& n, const double& R, const double& H, const double& N)
+void horPeaks(const double& n, const double& R, const double& H, const double& N, const int& n_thread)
 {
 	Gnuplot gp;
 	auto plot = gp.plotGroup();
@@ -131,7 +135,7 @@ void horPeaks(const double& n, const double& R, const double& H, const double& N
 
 	for(int i = 0; i < (int)obf.size(); ++i){
 		Planet3D p(R, H, N, n, obf[i], obf[i], r, "Config/map");
-		map = mapGen2(p, RES, 50, L, 0);
+		map = mapThread(p, RES, 50, L, 0, n_thread);
 
 		for(int i = 0; i <= RES; ++i){
 			xy.emplace_back(i*h - 50, map->map[RES/2][i]/map->Int2);
@@ -141,6 +145,7 @@ void horPeaks(const double& n, const double& R, const double& H, const double& N
 
 		delete map;
 		xy.clear();
+		p.m.destroy();
 	}
 
 
@@ -150,7 +155,7 @@ void horPeaks(const double& n, const double& R, const double& H, const double& N
 	gp << plot;
 }
 
-void peakDist(const double& n, const double& R, const double& H, const double& N)
+void peakDist(const double& n, const double& R, const double& H, const double& N, const int& n_thread)
 {
 	Gnuplot gp, gl;
 	auto plot = gp.plotGroup(), plotl = gl.plotGroup();
@@ -162,7 +167,7 @@ void peakDist(const double& n, const double& R, const double& H, const double& N
 	Planet3D p(R, H, N, n, 0, 0, r, "Config/map");
 
 	do{
-		map = mapGen2(p, RES, 50, L, 0);
+		map = mapThread(p, RES, 50, L, 0, n_thread);
 		xy.emplace_back(L, map->map[RES/2][RES/2]/map->Int2);
 		delete map;
 	}while((L = 10*L) < 10e11);
@@ -174,6 +179,8 @@ void peakDist(const double& n, const double& R, const double& H, const double& N
 	gp << "set ylabel \"Amplification\"\n";
 	gp << "plot '-' with lines title 'Amplification vs Detector distance'\n";
 	gp.send1d(xy);
+
+	p.m.destroy();
 }
 
 void crossSec(const double& n, const double& R, const double& H, const double& N)
@@ -197,9 +204,11 @@ void crossSec(const double& n, const double& R, const double& H, const double& N
 	gp << "set logscale y\n";
 	gp << "plot '-' with lines title 'Cross section'\n";
 	gp.send1d(xy);
+
+	p.m.destroy();
 }
 
-void resAmp(const double& n, const double& R, const double& H, const double& L, const double& N)
+void resAmp(const double& n, const double& R, const double& H, const double& L, const double& N, const int& n_thread)
 {
 	std::array<double, 3> r = {0,0,0};
 	Planet3D p(R, H, N, n, 0, 0, r, "Config/map");
@@ -212,7 +221,7 @@ void resAmp(const double& n, const double& R, const double& H, const double& L, 
 	for(int res = 100; res < 2000; res *= 1.1){
 		if(res%2) ++res;
 		Print("res = " << res);
-		map = mapGen2(p, res, 15, L, 0);
+		map = mapThread(p, res, 15, L, 0, n_thread);
 
 		xy.emplace_back(1000*15/(2.0*res), findMax(map)/map->Int2);
 		delete map;
@@ -227,7 +236,41 @@ void resAmp(const double& n, const double& R, const double& H, const double& L, 
 	gp << "plot '-' with lines title 'Amplification'\n";
 	gp.send1d(xy);
 
+	p.m.destroy();
 }
+
+void ampHeight(const double& n, const double& L, const double& N, const int& n_thread)
+{
+	std::array<double,3> r = {0,0,0};
+	std::vector<double> diam = {500, 3200, 20000, 50000, 100000, 150000};
+	std::vector<double> h = {2, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50};
+	int res = 500;
+	FlashMap *map;
+
+	Gnuplot gp;
+	auto plot = gp.plotGroup();
+	std::vector<std::pair<double, double>> xy;
+
+	for(double D : diam){
+		for(double H : h){
+			Planet3D p(D/2, H, N, N_REF, 0, 0, r, "Config/map");
+			map = mapThread(p, res, 15, L, 0, n_thread);
+			xy.emplace_back(H, findMax(map)/map->Int2);
+			delete map;
+			p.m.destroy();
+		}
+		plot.add_plot1d(xy, "with lines title 'R = " + ST(D/2) + "'");
+		xy.clear();
+	}
+
+	gp << "set xrange [0:50]\n";
+	gp << "set xlabel \"H - km\"\n";
+	gp << "set ylabel \"Amplification\"\n";
+	gp << plot;
+}
+
+
+
 
 
 

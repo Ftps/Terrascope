@@ -13,11 +13,12 @@
 
 void bendHeight(const std::vector<double>& n, const double& R, const double& H, const double& L, const double& N);
 void detecHeight(const std::vector<double>& n, const double& R, const double& H, const double& N);
-void ampWave(const double& n, const double& R, const double& H, const double& N);
-void horPeaks(const double& n, const double& R, const double& H, const double& N);
-void peakDist(const double& n, const double& R, const double& H, const double& N);
+void ampWave(const double& n, const double& R, const double& H, const double& N, const int& n_thread);
+void horPeaks(const double& n, const double& R, const double& H, const double& N, const int& n_thread);
+void peakDist(const double& n, const double& R, const double& H, const double& N, const int& n_thread);
 void crossSec(const double& n, const double& R, const double& H, const double& N);
-void resAmp(const double& n, const double& R, const double& H, const double& L, const double& N);
+void resAmp(const double& n, const double& R, const double& H, const double& L, const double& N, const int& n_thread);
+void ampHeight(const double& n, const double& L, const double& N, const int& n_thread);
 
 double findMax(const FlashMap* map);
 
