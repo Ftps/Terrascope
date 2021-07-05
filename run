@@ -2,10 +2,9 @@
 
 if [[ $LD_LIBRARY_PATH =~ "qcustomplot" ]]; then
 	echo -e "qcustomplot in library path\n"
-	echo $LD_LIBRARY_PATH
 else
-	p=$(pwd)
-	LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$p"
+	echo -e "adding qcustomplot to library path\n"
+	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/qcustomplot
 fi
 
 if [ -f 'exe' ]; then
