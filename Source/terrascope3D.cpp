@@ -504,9 +504,9 @@ FlashMap* mapThread(const Planet3D& p, const int& N, const double& S, const doub
 	std::vector<FlashMap*> map_t(0);
 	std::vector<std::thread> threads(0);
 	std::vector<double> thread_angle(thread_n+1);
-	int n_phi = 10*N, n_r = 50000*N/S;
+	int n_phi = 10*N, n_r = 50*p.R*N/S;
 	double dphi = 2*M_PI/n_phi, dr = (p.r_max - p.R)/n_r, opt = 0;
-	double t_angle = 2*M_PI/thread_n, h = 2*S/N;
+	double t_angle = 2*M_PI/thread_n, h = 2*S/N, h0;
 	std::array<double,3> pos, vel;
 	std::array<int,2> ij;
 	std::array<double,2> a;
@@ -526,7 +526,9 @@ FlashMap* mapThread(const Planet3D& p, const int& N, const double& S, const doub
 	// pre-process to calculate opt
 	if(hh == 0){
 		Print("Pre-calculating optimal starting distance . . .");
-		for(double r = p.r_max; r > p.R; r -= dr){
+		h0 = 0.5*p.atm.H*(1 - p.atm.H/(2*p.R))*log(2*M_PI*sq(p.n_ref*L)/(p.R*p.atm.H)) - 9*sq(p.atm.H)/(8*p.R);
+		opt = h0*(1 + 2*p.atm.H/p.R) + p.R;
+		for(double r = opt; r > p.R; r -= dr){
 			++map->ray_counter;
 			pos = {0, r, -2*p.r_max};
 			vel = {0, 0, 1};
@@ -578,7 +580,7 @@ FlashMap* mapThread(const Planet3D& p, const int& N, const double& S, const doub
 	for(const FlashMap *mt : map_t){
 		delete mt;
 	}
-
+	Print("Hit percentage = " << (100.0*map->ray_hit)/map->ray_counter);
 	return map;
 }
 

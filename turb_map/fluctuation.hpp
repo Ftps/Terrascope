@@ -18,7 +18,7 @@ struct MapOpt {
 
 class Turbulence_Map : protected MapOpt {
 	public:
-		Turbulence_Map(const MapOpt& m);
+		Turbulence_Map(const MapOpt& m, const int& n_thread);
 		~Turbulence_Map();
 		void draw(const std::string& name) const;
 		void write(const std::string& name) const;
@@ -34,7 +34,7 @@ class Turbulence_Map : protected MapOpt {
 
 class TurbPlot : public Turbulence_Map, public QWidget {
 	public:
-		TurbPlot(const MapOpt& m);
+		TurbPlot(const MapOpt& m, const int& n_thread);
 		~TurbPlot();
 	private:
 		void draw_plot(const int& P);

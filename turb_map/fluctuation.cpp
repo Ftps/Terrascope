@@ -1,16 +1,18 @@
 #include "fluctuation.hpp"
 
-Turbulence_Map::Turbulence_Map(const MapOpt& m) : MapOpt(m), Ysh(l_max), min(300), max(-300), Yml(l_max), E(l_max)
+Turbulence_Map::Turbulence_Map(const MapOpt& m, const int& n_thread) : MapOpt(m), Ysh(l_max), min(300), max(-300), Yml(l_max), E(l_max)
 {
 	//double max_t = 0, max_p = 0, h = 1e-3, gtet, gphi;
-	double max_t = -300, min_t = 300;
-	double tet, phi;
+	//double max_t = -300, min_t = 300;
+	//double tet, phi;
 	double dtet = 2*max_tet/w, dphi = 2*M_PI/l;
 	double aux_coef;
+	int dl = l/n_thread;
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::normal_distribution<double> dist;
 	image = new QImage(l, w, QImage::Format_RGB32);
+	std::vector<std::thread> thread(0);
 
 	for(int i = 0; i < l_max; ++i){
 		Yml[i].resize(2*(i+1)+1);
@@ -23,10 +25,46 @@ Turbulence_Map::Turbulence_Map(const MapOpt& m) : MapOpt(m), Ysh(l_max), min(300
 		}
 	}
 
+	Print("Allocating memory . . .");
 	map = new double*[w];
 	grad_tet = new double*[w];
 	grad_phi = new double*[w];
 	for(int i = 0; i < w; ++i){
+		map[i] = new double[l];
+		grad_tet[i] = new double[l];
+		grad_phi[i] = new double[l];
+		std::fill_n(map[i], l, n_ref);
+		std::fill_n(grad_tet[i], l, 0);
+		std::fill_n(grad_phi[i], l, 0);
+	}
+
+	Print("Starting up threads . . .");
+	for(int k = 0; k < n_thread; ++k){
+		thread.push_back(std::thread([this, dtet, dphi, dl, n_thread, k](){
+			int beg = k*dl, end = (k+1)*dl;
+			double tet, phi;
+			if(k == n_thread-1) end = l;
+			for(int i = 0; i < w; ++i){
+				tet = i*dtet - max_tet + M_PI/2;
+				for(int j = beg; j < end; ++j){
+					phi = j*dphi;
+					for(int ll = 1; ll <= l_max; ++ll){
+						for(int mm = -ll; mm <= ll; ++mm){
+							map[i][j] += Yml[ll-1][mm+ll]*Ysh(tet, phi, mm, ll);
+							grad_tet[i][j] += Yml[ll-1][mm+ll]*Ysh.gtet(tet, phi, mm, ll);
+							grad_phi[i][j] += Yml[ll-1][mm+ll]*Ysh.gphi(tet, phi, mm, ll);
+						}
+					}
+				}
+			}
+		}));
+	}
+
+	for(int i = 0; i < n_thread; ++i){
+		thread[i].join();
+		Print("Joined thread " << i+1 << ". . .");
+	}
+	/*for(int i = 0; i < w; ++i){
 		map[i] = new double[l];
 		grad_tet[i] = new double[l];
 		grad_phi[i] = new double[l];
@@ -53,7 +91,7 @@ Turbulence_Map::Turbulence_Map(const MapOpt& m) : MapOpt(m), Ysh(l_max), min(300
 		}
 	}
 
-	std::cout << "Max = " << max_t << ", Min = " << min_t << std::endl;
+	std::cout << "Max = " << max_t << ", Min = " << min_t << std::endl;*/
 }
 
 Turbulence_Map::~Turbulence_Map()
@@ -117,7 +155,7 @@ void Turbulence_Map::write(const std::string& name) const
 
 
 
-TurbPlot::TurbPlot(const MapOpt& m) : Turbulence_Map(m)
+TurbPlot::TurbPlot(const MapOpt& m, const int& n_thread) : Turbulence_Map(m, n_thread)
 {
 	grid = new QGridLayout(this);
 	plt = new QCustomPlot*[3];

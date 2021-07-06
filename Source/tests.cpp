@@ -218,14 +218,16 @@ void resAmp(const double& n, const double& R, const double& H, const double& L, 
 	Gnuplot gp;
 	std::vector<std::pair<double, double>> xy;
 
-	for(int res = 100; res < 2000; res *= 1.1){
+	for(int res = 100; res < 2500; res *= 1.2){
 		if(res%2) ++res;
 		Print("res = " << res);
 		map = mapThread(p, res, 15, L, 0, n_thread);
 
-		xy.emplace_back(1000*15/(2.0*res), findMax(map)/map->Int2);
+		xy.emplace_back((2000*15.0)/(res), findMax(map)/map->Int2);
 		delete map;
 	}
+	//Print("1m pixel");
+	//map = mapThread(p, res, 15, L, 0, n_thread);
 
 	gp << "set termoption enhanced\n";
 	//gp << "set xrange [" << ST(res[0]) << ":" << ST(res.back()) << "]\n";
@@ -243,6 +245,7 @@ void ampHeight(const double& n, const double& L, const double& N, const int& n_t
 {
 	std::array<double,3> r = {0,0,0};
 	std::vector<double> diam = {500, 3200, 20000, 50000, 100000, 150000};
+	//std::vector<double> diam = {500, 3200, 6400, 20000};
 	std::vector<double> h = {2, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50};
 	int res = 500;
 	FlashMap *map;
@@ -254,7 +257,7 @@ void ampHeight(const double& n, const double& L, const double& N, const int& n_t
 	for(double D : diam){
 		for(double H : h){
 			Planet3D p(D/2, H, N, N_REF, 0, 0, r, "Config/map");
-			map = mapThread(p, res, 15, L, 0, n_thread);
+			map = mapThread(p, res, 20, L, 0, n_thread);
 			xy.emplace_back(H, findMax(map)/map->Int2);
 			delete map;
 			p.m.destroy();

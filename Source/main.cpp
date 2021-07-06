@@ -2,18 +2,19 @@
 
 /*int main(int argc, char* argv[])
 {
-	double R = R_REF;			// planet radius
+	//double R = R_REF;			// planet radius
+	double R = R_REF;
 	double H = H_REF;			// atmospheric scale height
 	//double r_max = R + 15*H;	// top layer of the atmosphere
-	double L = 1e7;
+	double L = 1e9;
 	double N = 2e25;
 	std::array<double, 3> r = {0, 0, 0};
 	FinalPos ex;
 	double size = 50, l = 1500e-9; //l = (86.50415919381337933e-9)/1.3;
 	int res = 500;
-	FlashMap *test;
+	//FlashMap *test;
 
-	Planet3D p(R, H, N, N_REF, OBF, OBF, r, "Config/map");
+	Planet3D p(R, H, N, N_REF, 0, 0, r, "Config/map");
 	QApplication a(argc, argv);
 	ImageGen w(p, l, L, size, res, 0);
 
