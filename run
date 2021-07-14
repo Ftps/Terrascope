@@ -4,7 +4,13 @@ if [[ $LD_LIBRARY_PATH =~ "qcustomplot" ]]; then
 	echo -e "qcustomplot in library path\n"
 else
 	echo -e "adding qcustomplot to library path\n"
-	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/qcustomplot
+	if [ "$LD_LIBRARY_PATH" == "" ]; then
+		echo -e "path was empty\n"
+		export LD_LIBRARY_PATH=$(pwd)/qcustomplot
+	else
+		echo -e "path wasn't empty\n"
+		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/qcustomplot
+	fi
 fi
 
 if [ -f 'exe' ]; then
@@ -15,4 +21,5 @@ make
 
 if [ -f 'exe' ]; then
 	time ./exe "$@"
+	#valgrind --leak-check=full ./exe "$@"
 fi

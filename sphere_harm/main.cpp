@@ -4,8 +4,8 @@
 int main(int argc, char* argv[])
 {
 
-	int l = 500;
-	int N_min = 1000;
+	int l = 250;
+	int N_min = 1500;
 	int N_max = 3000;
 
 	fillNumbers(l, N_min, N_max);

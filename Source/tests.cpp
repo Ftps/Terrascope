@@ -245,9 +245,10 @@ void ampHeight(const double& n, const double& L, const double& N, const int& n_t
 {
 	std::array<double,3> r = {0,0,0};
 	std::vector<double> diam = {500, 3200, 20000, 50000, 100000, 150000};
+	//std::vector<double> diam = {50000, 100000, 150000};
 	//std::vector<double> diam = {500, 3200, 6400, 20000};
 	std::vector<double> h = {2, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50};
-	int res = 500;
+	int res = 100;
 	FlashMap *map;
 
 	Gnuplot gp;
@@ -257,6 +258,7 @@ void ampHeight(const double& n, const double& L, const double& N, const int& n_t
 	for(double D : diam){
 		for(double H : h){
 			Planet3D p(D/2, H, N, N_REF, 0, 0, r, "Config/map");
+			Print("R = " << D/2 << ", H = " << H);
 			map = mapThread(p, res, 20, L, 0, n_thread);
 			xy.emplace_back(H, findMax(map)/map->Int2);
 			delete map;
@@ -268,6 +270,103 @@ void ampHeight(const double& n, const double& L, const double& N, const int& n_t
 
 	gp << "set xrange [0:50]\n";
 	gp << "set xlabel \"H - km\"\n";
+	gp << "set ylabel \"Amplification\"\n";
+	gp << plot;
+}
+
+void optim(const double& n, const double& L, const double& N)
+{
+	std::array<double,3> r = {0,0,0};
+	std::vector<double> diam = {500, 3200, 20000, 50000, 100000, 150000};
+	std::vector<double> h = {2, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50};
+	std::array<double,3> pos, vel;
+	std::array<double,2> a;
+	std::array<int,2> ij;
+	int res = 100;
+	double S = 50, opt_M, opt_m, opt_a, hh = 2*S/res, h0;
+	bool in_pic;
+	std::ofstream fp("optim2.dat", std::ofstream::out);
+
+	std::vector<std::pair<double, double>> xy1, xy2, xy3;
+
+	fp << "Optimal data:" << std::endl;
+	fp.precision(10);
+
+	for(double D : diam){
+		Gnuplot gp;
+		auto plot = gp.plotGroup();
+		for(double H : h){
+			in_pic = false;
+			opt_M = -1;
+			opt_m = -1;
+			fp << "D = " << D << ", H = " << H << ": ";
+			Planet3D p(D/2, H, N, N_REF, 0, 0, r, "Config/map");
+			Print("D = " << D << ", H = " << H << ", r_max = " << p.r_max);
+			for(double rr = p.r_max; rr > p.R; rr -= 0.005){
+				pos = {0, rr, -2*p.r_max};
+				vel = {0, 0, 1};
+				rayTrace(p, pos, vel);
+
+				a = planeIntersect(pos, vel, L, 0, hh);
+				ij[X] = (int)(res*(a[X] + S + hh))/(2*S);
+				ij[Y] = (int)(res*(a[Y] + S + hh))/(2*S);
+				if(ij[X] >= 0 && ij[Y] >= 0 && ij[X] < res+1 && ij[Y] < res+1){
+					if(!in_pic){
+						opt_M = rr;
+						in_pic = true;
+					}
+				}
+				else if(in_pic){
+					opt_m = rr;
+					break;
+				}
+
+			}
+			if(!in_pic) Print("ERROR, ij = {" << ij[X] << ", " << ij[Y] << "}" );
+			h0 = 0.5*p.atm.H*(1 - p.atm.H/(2*p.R))*log(2*M_PI*sq(p.n_ref*L)/(p.R*p.atm.H)) - 9*sq(p.atm.H)/(8*p.R) + (sqrt(2)-1)*sqrt(p.atm.H*p.R/(2*M_PI))*(p.R/L);
+			opt_a = h0*(1 + 2*p.atm.H/p.R) + p.R;
+			p.m.destroy();
+			xy1.emplace_back(H, opt_M);
+			xy2.emplace_back(H, opt_m);
+			xy3.emplace_back(H, opt_a);
+			fp << fixed << opt_M << " " << fixed << opt_m << " " << fixed << opt_a << std::endl;
+		}
+		fp << std::endl;
+		plot.add_plot1d(xy1, "with lines title 'max, R = " + ST(D/2) + "'");
+		plot.add_plot1d(xy2, "with lines title 'min, R = " + ST(D/2) + "'");
+		plot.add_plot1d(xy3, "with lines title 'calc, R = " + ST(D/2) + "'");
+		gp << "set xrange [0:50]\n";
+		gp << "set xlabel \"H - km\"\n";
+		gp << "set ylabel \"Amplification\"\n";
+		gp << plot;
+		xy1.clear();
+		xy2.clear();
+		xy3.clear();
+	}
+
+	fp.close();
+}
+
+void atmosphericDensity(const double& n, const double& R, const double& H, const double& L, const int& n_thread)
+{
+	std::array<double,3> r = {0,0,0};
+	FlashMap *map;
+
+	Gnuplot gp;
+	auto plot = gp.plotGroup();
+	std::vector<std::pair<double, double>> xy;
+
+	for(double N = 1e25; N < 6.5e26; N *= 2){
+		Planet3D p(R, H, N, n, 0, 0, r, "Config/map");
+		p.updateSigma(25e-9);
+		map = mapThread(p, 250, 20, L, 0, n_thread);
+		xy.emplace_back(N/1e25, findMax(map));
+		delete map;
+	}
+
+	plot.add_plot1d(xy, "with lines title 'N vs amplification'");
+	gp << "set xrange [0:50]\n";
+	gp << "set xlabel \"N - molecular density x10^{25}\"\n";
 	gp << "set ylabel \"Amplification\"\n";
 	gp << plot;
 }

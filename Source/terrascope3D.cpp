@@ -66,8 +66,10 @@ double Atmosphere::getSigma(const double& l) const
 
 
 
-Planet3D::Planet3D(const double &R, const double& H, const double& N, const double& n_ref, const double& obf_y, const double& obf_z, const std::array<double, 3>& r, const std::string& filemap, const std::string& filename) : R(R), R2(sq(R)), r_max(R + 15*H), r2_max(sq(r_max)), betay(1/(1+obf_y)), betaz(1/(1+obf_z)), n_ref(n_ref), atm(N, H, filename), m(filemap)
+Planet3D::Planet3D(const double &R, const double& H, const double& N, const double& n_ref, const double& obf_y, const double& obf_z, const std::array<double, 3>& r, const std::string& filemap, const std::string& filename) : R(R), R2(sq(R)), r_max(R + 15*H), r2_max(sq(r_max)), betay(1/(1+obf_y)), betaz(1/(1+obf_z)), atm(N, H, filename), n_ref(n_ref), m(filemap)
 {
+	int count = 0;
+
 	if(r[TET] || r[PHI]){
 		dev = true;
 		rot[X][X] = cos(r[TET]);
@@ -127,6 +129,13 @@ Planet3D::Planet3D(const double &R, const double& H, const double& N, const doub
 	}
 
 	turb = filemap.compare("empty") && !n_ref;
+	if(turb){
+		for(double phi = 0; phi < 2*M_PI; phi += 2*M_PI/100.0){
+			++count;
+			this->n_ref += m.n(M_PI/2, phi);
+		}
+		this->n_ref = this->n_ref/count;
+	}
 }
 
 double Planet3D::checkDistance(const std::array<double,3>& pos) const
@@ -224,6 +233,23 @@ std::array<double, 3> Planet3D::sphereGrad(const std::array<double, 3>& pos_s, c
 
 	return exp(-(pos_s[X] - R)/atm.H)*grad_s;
 }
+
+void FlashMap::save(const std::string& filename){
+	std::ofstream fp(filename, std::ofstream::out);
+
+	fp << N << " " << S << std::endl;
+	fp << L << " " << hh << " " << alpha << std::endl;
+	fp << ray_hit << " " << ray_counter << std::endl;
+	fp << Int1 << " " << Int2 << std::endl;
+
+	for(int i = 0; i < N+1; ++i){
+		for(int j = 0; j < N+1; ++j){
+			fp << map[i][j] << " ";
+		}
+		fp << std::endl;
+	}
+}
+
 
 
 
@@ -526,9 +552,9 @@ FlashMap* mapThread(const Planet3D& p, const int& N, const double& S, const doub
 	// pre-process to calculate opt
 	if(hh == 0){
 		Print("Pre-calculating optimal starting distance . . .");
-		h0 = 0.5*p.atm.H*(1 - p.atm.H/(2*p.R))*log(2*M_PI*sq(p.n_ref*L)/(p.R*p.atm.H)) - 9*sq(p.atm.H)/(8*p.R);
-		opt = h0*(1 + 2*p.atm.H/p.R) + p.R;
-		for(double r = opt; r > p.R; r -= dr){
+		h0 = 0.5*p.atm.H*(1 - p.betay*p.atm.H/(2*p.R))*log(2*M_PI*p.betay*sq(p.n_ref*L)/(p.R*p.atm.H)) - 9*p.betay*sq(p.atm.H)/(8*p.R);
+		opt = h0*(1 + 2*p.betay*p.atm.H/p.R) + p.R/p.betay;
+		for(double r = opt+0.5; r > p.R; r -= dr){
 			++map->ray_counter;
 			pos = {0, r, -2*p.r_max};
 			vel = {0, 0, 1};

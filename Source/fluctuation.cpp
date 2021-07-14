@@ -1,4 +1,5 @@
 #include "fluctuation.hpp"
+#include <cassert>
 
 Turbulence_Map::Turbulence_Map(const std::string& filename)
 {
@@ -73,11 +74,19 @@ double Turbulence_Map::biLin(const double& tet, const double& phi, const int& m)
 	int i, j;
 	double x, y;
 
-	i = std::floor((phi/(2*M_PI))*(w-1));
-	j = std::floor(((tet - M_PI_2 + max_tet)/(2*max_tet))*(l-1));
+	x = (phi/(2*M_PI))*(w-2);
+	y = ((tet - M_PI_2 + max_tet)/(2*max_tet))*(l-2);
+	i = std::floor(x);
+	j = std::floor(y);
 
-	x = phi - i*dphi;
-	y = tet - M_PI_2 + max_tet - j*dtet;
+	//x = phi - i*dphi;
+	//y = tet - M_PI_2 + max_tet - j*dtet;
+	x = x - i;
+	y = y - j;
 
-	return h2*((dphi-x)*(dtet-y)*map[m][i][j] + x*(dtet-y)*map[m][i+1][j] + (dphi-x)*y*map[m][i][j+1] + x*y*map[m][i+1][j+1]);
+	//assert(0 <= i && i < w-1);
+	//assert(0 <= j && j < l-1);
+
+	return (1-x)*(1-y)*map[m][i][j] + x*(1-y)*map[m][i+1][j] + (1-x)*y*map[m][i][j+1] + x*y*map[m][i+1][j+1];
+	//return h2*((dphi-x)*(dtet-y)*map[m][i][j] + x*(dtet-y)*map[m][i+1][j] + (dphi-x)*y*map[m][i][j+1] + x*y*map[m][i+1][j+1]);
 }

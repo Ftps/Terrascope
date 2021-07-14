@@ -1,18 +1,28 @@
 #!/bin/bash
 
+# add qcustomplot library to path
 if [[ $LD_LIBRARY_PATH =~ "qcustomplot" ]]; then
 	echo -e "qcustomplot in library path\n"
 else
-	echo -e "adding qcustomplot to library path\n"
-	LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/../qcustomplot
+	echo -e "adding qcustomplot to library path"
+	if [ "$LD_LIBRARY_PATH" == "" ]; then
+		echo -e "path was empty\n"
+		export LD_LIBRARY_PATH=$(pwd)/../qcustomplot
+	else
+		echo -e "path wasn't empty\n"
+		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/../qcustomplot
+	fi
 fi
 
+# remove old exec if it exists
 if [ -f 'exe' ]; then
 	rm exe
 fi
 
+# make a new one
 make
 
+# run it with time and arguments
 if [ -f 'exe' ]; then
 	time ./exe "$@"
 fi

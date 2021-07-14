@@ -16,7 +16,7 @@ Turbulence_Map::Turbulence_Map(const MapOpt& m, const int& n_thread) : MapOpt(m)
 
 	for(int i = 0; i < l_max; ++i){
 		Yml[i].resize(2*(i+1)+1);
-		dist = std::normal_distribution<double>(0, sqrt(n_ref*CLM/(2*(i+1)+1)));
+		dist = std::normal_distribution<double>(0, sqrt(n_ref*m.clm/(2*(i+1)+1)));
 		aux_coef = std::pow(i+1, -alpha/2);
 		E[i] = 0;
 		for(int j = 0; j < 2*(i+1)+1; ++j){
@@ -45,6 +45,7 @@ Turbulence_Map::Turbulence_Map(const MapOpt& m, const int& n_thread) : MapOpt(m)
 			double tet, phi;
 			if(k == n_thread-1) end = l;
 			for(int i = 0; i < w; ++i){
+				Print("Thread " << k+1 << " at " << (100.0*i)/w << "%");
 				tet = i*dtet - max_tet + M_PI/2;
 				for(int j = beg; j < end; ++j){
 					phi = j*dphi;

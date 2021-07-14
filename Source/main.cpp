@@ -1,6 +1,6 @@
 #include "tests.hpp"
 
-/*int main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
 	//double R = R_REF;			// planet radius
 	double R = R_REF;
@@ -21,22 +21,22 @@
 	w.show();
 	a.exec();
 
-	test = mapGen2(p, res, size, L, 0);
-	delete test;
-	test = mapThread(p, res, size, L, 0, 12);
-	delete test;
+	//test = mapGen2(p, res, size, L, 0);
+	//delete test;
+	//test = mapThread(p, res, size, L, 0, 12);
+	//delete test;
 
 	p.m.destroy();
 
 	return 0;
-}*/
+}
 
-int main(int argc, char* argv[])
+/*int main(int argc, char* argv[])
 {
 	double R = R_REF;			// planet radius
 	double H = H_REF;			// atmospheric scale height
 	//double r_max = R + 15*H;	// top layer of the atmosphere
-	double L = 1500000000;
+	double L = 1000000000;
 	double N = 2e25;
 	std::vector<double> n = {0.00001, 0.0002, 0.001, N_REF, 0.005};
 	//Planet3D p(R, H, N, N_REF, 0, 0, r, "Config/map");
@@ -52,9 +52,11 @@ int main(int argc, char* argv[])
 	//crossSec(N_REF, R, H, N);
 	//ampWave(N_REF, R, H, N, n_thread);
 	//resAmp(N_REF, R, H, L, N, n_thread);
-	ampHeight(N_REF, L, N, n_thread);
+	//ampHeight(N_REF, L, N, n_thread);
+	//optim(N_REF, L, N);
+	atmosphericDensity(N_REF, R, H, L, n_thread);
 
 	//p.m.destroy();
 
 	return 0;
-}
+}*/

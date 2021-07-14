@@ -52,6 +52,7 @@ void ImageGen::drawCFM(Planet3D& p)
 	colorMap->rescaleDataRange();
 	plt->axisRect()->setMarginGroup(QCP::msBottom|QCP::msTop, marginGroup);
 	colorScale->setMarginGroup(QCP::msBottom|QCP::msTop, marginGroup);
+	colorMap->setInterpolate(true);
 	plt->rescaleAxes();
 
 	delete map;

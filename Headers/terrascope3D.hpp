@@ -37,9 +37,9 @@ class Atmosphere {
 
 class Planet3D {
 	public:
-		const double R, R2, r_max, r2_max, betay, betaz, n_ref;
+		const double R, R2, r_max, r2_max, betay, betaz;
 		Atmosphere atm;
-		double o;
+		double o, n_ref;
 		bool dev, turb;
 
 		Planet3D(const double &R, const double& H, const double& N, const double& n_ref, const double& obf_y, const double& obf_z, const std::array<double, 3>& r, const std::string& filemap = "empty", const std::string& filename = "Config/atmosphere.dat");
@@ -65,7 +65,9 @@ struct FlashMap {
 	double** map;
 
 	FlashMap(const int& N, const int& S, const double& L, const double& hh, const double& alpha) : N(N), S(S), L(L), hh(hh), alpha(alpha), ray_hit(0), ray_counter(0), Int1(0), Int2(0), map(createMatrix(N+1)) {}
+	FlashMap(const std::string& filename);
 	~FlashMap() { freeMatrix(map, N+1); }
+	void save(const std::string& filename);
 };
 
 std::array<double,3> rayTracing(const Planet3D& p, const double& H, const double& L, const std::array<double,2>& a, double& min, const double& dt = 10);

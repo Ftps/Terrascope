@@ -13,7 +13,7 @@
 
 struct MapOpt {
 	int l, w, l_max;
-	double alpha, n_ref, max_tet;
+	double alpha, n_ref, max_tet, clm;
 };
 
 class Turbulence_Map : protected MapOpt {

@@ -19,6 +19,8 @@ void peakDist(const double& n, const double& R, const double& H, const double& N
 void crossSec(const double& n, const double& R, const double& H, const double& N);
 void resAmp(const double& n, const double& R, const double& H, const double& L, const double& N, const int& n_thread);
 void ampHeight(const double& n, const double& L, const double& N, const int& n_thread);
+void optim(const double& n, const double& L, const double& N);
+void atmosphericDensity(const double& n, const double& R, const double& H, const double& L, const int& n_thread);
 
 double findMax(const FlashMap* map);
 
