@@ -3,7 +3,7 @@
 if [[ $LD_LIBRARY_PATH =~ "qcustomplot" ]]; then
 	echo -e "qcustomplot in library path\n"
 else
-	echo -e "adding qcustomplot to library path\n"
+	echo -e "adding qcustomplot to library path"
 	if [ "$LD_LIBRARY_PATH" == "" ]; then
 		echo -e "path was empty\n"
 		export LD_LIBRARY_PATH=$(pwd)/qcustomplot

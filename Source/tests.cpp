@@ -130,7 +130,7 @@ void horPeaks(const double& n, const double& R, const double& H, const double& N
 	FlashMap *map;
 	//std::vector<double> obf = {0, OBF/100, OBF/10, OBF/2, OBF, 2*OBF};
 	std::vector<double> obf = {0, OBF/2, OBF, 2*OBF};
-	int RES = 250;
+	int RES = 500;
 	double L = 1500000, h = 2*50.0/RES;
 
 	for(int i = 0; i < (int)obf.size(); ++i){
@@ -371,6 +371,34 @@ void atmosphericDensity(const double& n, const double& R, const double& H, const
 	gp << plot;
 }
 
+void diamondSize(const double& n, const double& R, const double& N, const int& n_thread)
+{
+	std::array<double,3> r = {0,0,0};
+	FlashMap *map;
+	std::vector<double> H = {5, 10, 25};
+
+	Gnuplot gp;
+	auto plot = gp.plotGroup();
+	std::vector<std::pair<double, double>> xy;
+
+	for(double h : H){
+		for(double L = 1e7; L < 1e10; L *= 10){
+			Planet3D p(R, h, N, n, OBF, OBF, r, "Config/map");
+			map = mapThread(p, 250, 100, L, 0, n_thread);
+			xy.emplace_back(L, findDiamond(map));
+		}
+		plot.add_plot1d(xy, "with lines title 'H = " + ST(h) + "'");
+		xy.clear();
+	}
+
+	gp << "set xrange [1e7:1e9]\n";
+	gp << "set logscale x\n";
+	gp << "set xlabel \"L - km\"\n";
+	gp << "set ylabel \"d - km\"\n";
+	gp << plot;
+}
+
+
 
 
 
@@ -388,4 +416,18 @@ double findMax(const FlashMap* map)
 	}
 
 	return max;
+}
+
+double findDiamond(const FlashMap* map)
+{
+	double max = 0, pos = 0;
+
+	for(int i = 0; i < map->N/2 + 1; ++i){
+		if(max < map->map[i][map->N/2+1]){
+			max = map->map[i][map->N/2+1];
+			pos = map->S*(map->N - 2*i)/map->N;
+		}
+	}
+
+	return pos;
 }

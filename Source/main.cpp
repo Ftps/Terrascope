@@ -11,10 +11,10 @@ int main(int argc, char* argv[])
 	std::array<double, 3> r = {0, 0, 0};
 	FinalPos ex;
 	double size = 50, l = 1500e-9; //l = (86.50415919381337933e-9)/1.3;
-	int res = 500;
+	int res = 250;
 	//FlashMap *test;
 
-	Planet3D p(R, H, N, N_REF, 0, 0, r, "Config/map");
+	Planet3D p(R, H, N, 0, 0, 0, r, "Config/map_0,000253_2,666667_0,100000");
 	QApplication a(argc, argv);
 	ImageGen w(p, l, L, size, res, 0);
 
@@ -54,7 +54,8 @@ int main(int argc, char* argv[])
 	//resAmp(N_REF, R, H, L, N, n_thread);
 	//ampHeight(N_REF, L, N, n_thread);
 	//optim(N_REF, L, N);
-	atmosphericDensity(N_REF, R, H, L, n_thread);
+	//atmosphericDensity(N_REF, R, H, L, n_thread);
+	diamondSize(N_REF, R, N, n_thread);
 
 	//p.m.destroy();
 

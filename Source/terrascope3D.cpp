@@ -530,7 +530,7 @@ FlashMap* mapThread(const Planet3D& p, const int& N, const double& S, const doub
 	std::vector<FlashMap*> map_t(0);
 	std::vector<std::thread> threads(0);
 	std::vector<double> thread_angle(thread_n+1);
-	int n_phi = 10*N, n_r = 50*p.R*N/S;
+	int n_phi = ((p.turb) ? 100:10)*N, n_r = 50*p.R*N/S;
 	double dphi = 2*M_PI/n_phi, dr = (p.r_max - p.R)/n_r, opt = 0;
 	double t_angle = 2*M_PI/thread_n, h = 2*S/N, h0;
 	std::array<double,3> pos, vel;
