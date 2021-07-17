@@ -1,18 +1,18 @@
 #include "drawCFM.hpp"
 
-ImageGen::ImageGen(Planet3D& p, const double& l, const double& L, const double& S, const int& N, const double& h) : L(L), S(S), l(l), h(h), N(N)
+ImageGen::ImageGen(Planet3D& p, const double& l, const double& L, const double& S, const int& N, const double& h, const int& n_thread) : L(L), S(S), l(l), h(h), N(N)
 {
 	grid = new QGridLayout(this);
 	plt = new QCustomPlot(this);
 
-	drawCFM(p);
+	drawCFM(p, n_thread);
 
 	plt->setFixedSize(900, 700);
 	grid->addWidget(plt, 0, 0);
 	this->setWindowTitle("Central Flash Map");
 }
 
-void ImageGen::drawCFM(Planet3D& p)
+void ImageGen::drawCFM(Planet3D& p, const int& n_thread)
 {
 	QCPColorMap *colorMap = new QCPColorMap(plt->xAxis, plt->yAxis);
 	QCPColorScale *colorScale = new QCPColorScale(plt);
@@ -35,7 +35,7 @@ void ImageGen::drawCFM(Planet3D& p)
 	p.updateSigma(l);
 	//map = mapGen2(p, N, S, L, h);
 	Print("h = " << h);
-	map = mapThread(p, N, S, L, h, 4);
+	map = mapThread(p, N, S, L, h, n_thread);
 
 	for(int i = 0; i < N+1; ++i){
 		for(int j = 0; j < N+1; ++j){

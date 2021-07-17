@@ -322,7 +322,6 @@ void optim(const double& n, const double& L, const double& N)
 				}
 
 			}
-			if(!in_pic) Print("ERROR, ij = {" << ij[X] << ", " << ij[Y] << "}" );
 			h0 = 0.5*p.atm.H*(1 - p.atm.H/(2*p.R))*log(2*M_PI*sq(p.n_ref*L)/(p.R*p.atm.H)) - 9*sq(p.atm.H)/(8*p.R) + (sqrt(2)-1)*sqrt(p.atm.H*p.R/(2*M_PI))*(p.R/L);
 			opt_a = h0*(1 + 2*p.atm.H/p.R) + p.R;
 			p.m.destroy();
@@ -362,6 +361,7 @@ void atmosphericDensity(const double& n, const double& R, const double& H, const
 		map = mapThread(p, 250, 20, L, 0, n_thread);
 		xy.emplace_back(N/1e25, findMax(map));
 		delete map;
+		p.m.destroy();
 	}
 
 	plot.add_plot1d(xy, "with lines title 'N vs amplification'");
@@ -371,32 +371,111 @@ void atmosphericDensity(const double& n, const double& R, const double& H, const
 	gp << plot;
 }
 
-void diamondSize(const double& n, const double& R, const double& N, const int& n_thread)
+void diamondSize(const double& n, const double& H, const double& L, const double& N, const int& n_thread)
 {
 	std::array<double,3> r = {0,0,0};
 	FlashMap *map;
-	std::vector<double> H = {5, 10, 25};
+	//std::vector<double> H = {5, 10, 25};
+	std::vector<double> rr = {500, 3250, 10000, 25000};
+	std::vector<double> oo = {OBF/2, 0.002, 0.005, 0.01, 0.015, 0.02};
 
 	Gnuplot gp;
 	auto plot = gp.plotGroup();
 	std::vector<std::pair<double, double>> xy;
 
-	for(double h : H){
-		for(double L = 1e7; L < 1e10; L *= 10){
-			Planet3D p(R, h, N, n, OBF, OBF, r, "Config/map");
-			map = mapThread(p, 250, 100, L, 0, n_thread);
-			xy.emplace_back(L, findDiamond(map));
+	for(double R : rr){
+		double S = 25*R/R_REF;
+		xy.emplace_back(0,0);
+		for(double o : oo){
+			Print("R = " << R << ", o = " << o);
+			Planet3D p(R, H, N, n, o, o, r, "Config/map");
+			map = mapThread(p, 100, S, L, 0, n_thread);
+			xy.emplace_back(o*100, 2*findDiamond(map));
+			p.m.destroy();
+			S *= 1.4;
 		}
-		plot.add_plot1d(xy, "with lines title 'H = " + ST(h) + "'");
+		plot.add_plot1d(xy, "with lines title 'R = " + ST(R) + "'");
 		xy.clear();
 	}
 
-	gp << "set xrange [1e7:1e9]\n";
-	gp << "set logscale x\n";
-	gp << "set xlabel \"L - km\"\n";
+
+	//gp << "set xrange [1e7:1e9]\n";
+	gp << "set termoption enhanced\n";
+	gp << "set xlabel \"{/Symbol a} - %\"\n";
 	gp << "set ylabel \"d - km\"\n";
 	gp << plot;
 }
+
+void turbvs(const double& R, const double& H, const double& L, const double& N, const int& n_thread)
+{
+	Gnuplot gp;
+	auto plot = gp.plotGroup();
+	std::vector<std::pair<double, double>> xy;
+	std::array<double, 3> r = {0, 0, 0};
+	FlashMap *map;
+	//std::vector<double> obf = {0, OBF/100, OBF/10, OBF/2, OBF, 2*OBF};
+	std::vector<double> obf = {0, OBF/2, OBF, 2*OBF};
+	int RES = 500;
+	std::vector<double> n = {0.002, 0};
+	std::vector<std::string> s = {"no turbulence", "turbulence"};
+	double h = 2*50.0/RES;
+
+	for(int k = 0; k < (int)n.size(); ++k){
+		Planet3D p(R, H, N, n[k], 0, 0, r, "Config/map_0,002000_1,666667_0,100000");
+		map = mapThread(p, RES, 50, L, 0, n_thread);
+
+		for(int i = 0; i <= RES; ++i){
+			xy.emplace_back(i*h - 50, map->map[RES/2][i]/map->Int2);
+		}
+
+		plot.add_plot1d(xy, "with lines title '" + s[k] +  "'");
+
+		delete map;
+		xy.clear();
+		p.m.destroy();
+	}
+
+	gp << "set xrange [-50:50]\n";
+	gp << "set xlabel \"x - km\"\n";
+	gp << "set ylabel \"Amplification\"\n";
+	gp << plot;
+
+}
+
+void turbsize(const double& R, const double& H, const double& L, const double& N, const int& n_thread)
+{
+	std::array<double, 3> r = {0,0,0};
+	Planet3D p(R, H, N, 0, 0, 0, r, "Config/map_0,002000_1,666667_0,100000");
+	//std::vector<int> res = {100, 250, 500};//, 1000, 2500, 5000};
+	FlashMap *map;
+
+	Gnuplot gp;
+	std::vector<std::pair<double, double>> xy;
+
+	for(int res = 50; res < 1500; res *= 1.5){
+		if(res%2) ++res;
+		Print("res = " << res);
+		map = mapThread(p, res, 15, L, 0, n_thread);
+
+		xy.emplace_back((2000*15.0)/(res), findMax(map)/map->Int2);
+		delete map;
+	}
+	//Print("1m pixel");
+	//map = mapThread(p, res, 15, L, 0, n_thread);
+
+	gp << "set termoption enhanced\n";
+	//gp << "set xrange [" << ST(res[0]) << ":" << ST(res.back()) << "]\n";
+	gp << "set xlabel \"Pixel size - m\"\n";
+	//gp << "set logscale x\n";
+	gp << "set ylabel \"Amplification\"\n";
+	//gp << "set logscale y\n";
+	gp << "plot '-' with lines title 'Amplification'\n";
+	gp.send1d(xy);
+
+	p.m.destroy();
+}
+
+
 
 
 

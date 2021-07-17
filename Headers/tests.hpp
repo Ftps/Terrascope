@@ -21,7 +21,9 @@ void resAmp(const double& n, const double& R, const double& H, const double& L, 
 void ampHeight(const double& n, const double& L, const double& N, const int& n_thread);
 void optim(const double& n, const double& L, const double& N);
 void atmosphericDensity(const double& n, const double& R, const double& H, const double& L, const int& n_thread);
-void diamondSize(const double& n, const double& R, const double& N, const int& n_thread);
+void diamondSize(const double& n, const double& H, const double& L, const double& N, const int& n_thread);
+void turbvs(const double& R, const double& H, const double& L, const double& N, const int& n_thread);
+void turbsize(const double& R, const double& H, const double& L, const double& N, const int& n_thread);
 
 double findMax(const FlashMap* map);
 double findDiamond(const FlashMap* map);

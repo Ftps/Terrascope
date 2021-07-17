@@ -530,7 +530,7 @@ FlashMap* mapThread(const Planet3D& p, const int& N, const double& S, const doub
 	std::vector<FlashMap*> map_t(0);
 	std::vector<std::thread> threads(0);
 	std::vector<double> thread_angle(thread_n+1);
-	int n_phi = ((p.turb) ? 100:10)*N, n_r = 50*p.R*N/S;
+	int n_phi = 10*N, n_r = 50*p.R*N/S;
 	double dphi = 2*M_PI/n_phi, dr = (p.r_max - p.R)/n_r, opt = 0;
 	double t_angle = 2*M_PI/thread_n, h = 2*S/N, h0;
 	std::array<double,3> pos, vel;
@@ -550,7 +550,7 @@ FlashMap* mapThread(const Planet3D& p, const int& N, const double& S, const doub
 	}
 
 	// pre-process to calculate opt
-	if(hh == 0){
+	//if(hh == 0){
 		Print("Pre-calculating optimal starting distance . . .");
 		h0 = 0.5*p.atm.H*(1 - p.betay*p.atm.H/(2*p.R))*log(2*M_PI*p.betay*sq(p.n_ref*L)/(p.R*p.atm.H)) - 9*p.betay*sq(p.atm.H)/(8*p.R);
 		opt = h0*(1 + 2*p.betay*p.atm.H/p.R) + p.R/p.betay;
@@ -571,7 +571,7 @@ FlashMap* mapThread(const Planet3D& p, const int& N, const double& S, const doub
 				break;
 			}
 		}
-	}
+	//}
 
 	// process threads
 	Print("Starting threads . . .");
@@ -617,10 +617,13 @@ void map_threaded(FlashMap* m, const Planet3D& p, const double& opt, const doubl
 	std::array<int,2> ij;
 	std::array<double,2> a;
 	double intensity, h = 2*m->S/m->N;
+	long dist;
 
 	for(double phi = phi1; phi < phi2; phi += dphi){
 		in_picture = false;
-		for(double r = (opt && !m->hh) ? opt:p.r_max; r > p.R; r -= dr){
+		dist = 2e16;
+		for(double r = opt; r > p.R; r -= dr){
+		//for(double r = (opt/p.betay)*sqrt(1 + (sq(p.betay)-1)*sq(cos(phi))); r > p.R; r -= dr){
 			++(m->ray_counter);
 			pos = {r*cos(phi), r*sin(phi), -2*p.r_max};
 			vel = {0, 0, 1};
@@ -648,6 +651,9 @@ void map_threaded(FlashMap* m, const Planet3D& p, const double& opt, const doubl
 				++(m->ray_hit);
 			}
 			else if(in_picture) break;
+			else if(dist < sq(ij[X] - m->N) + sq(ij[Y] - m->N)) break;
+			dist = sq(ij[X] - m->N) + sq(ij[Y] - m->N);
+
 		}
 	}
 }
